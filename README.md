@@ -7,9 +7,9 @@
 Independent Research · India
 [GitHub](https://github.com/pulkit6732/aetherproof) · [LinkedIn](https://linkedin.com/in/pulkit-srivastava-2033942a6)
 
-**Read the paper:** [reversible_faithful_networks.html](./reversible_faithful_networks.html)
+**Read the paper (live, rendered):** https://pulkit6732.github.io/rfn-paper/
 
-Note: GitHub displays `.html` files as source code by default, not as a rendered page. To view it formatted, either download the file and open it locally in a browser, or use a raw-HTML viewer such as `htmlpreview.github.io/?` prepended to the raw file URL.
+Source file: [reversible_faithful_networks.html](./reversible_faithful_networks.html)
 
 > **Status:** Preprint. Pending submission to arXiv (cs.LG).
 
