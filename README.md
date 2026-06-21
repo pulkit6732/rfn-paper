@@ -1,4 +1,5 @@
 # Reversible Faithful Networks (RFN)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20782418.svg)](https://doi.org/10.5281/zenodo.20782418)
 
 ### Invertibility as a Tamper-Detection Certificate for Additive Attribution
 *with a Two-Axis Completeness Theorem for Regression Hallucination Detection*
@@ -9,7 +10,6 @@ Independent Research · India
 
 **Read the paper (live, rendered):** https://pulkit6732.github.io/rfn-paper/
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20782418.svg)](https://doi.org/10.5281/zenodo.20782418)
 
 Source file: [reversible_faithful_networks.html](./reversible_faithful_networks.html)
 
