@@ -13,6 +13,7 @@ Source file: [reversible_faithful_networks.html](./reversible_faithful_networks.
 
 > **Status:** Preprint. Pending submission to arXiv (cs.LG).
 
+**Code:** [github.com/pulkit6732/faithful-net](https://github.com/pulkit6732/faithful-net)
 ---
 
 ## Abstract
