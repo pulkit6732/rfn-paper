@@ -9,6 +9,8 @@ Independent Research · India
 
 **Read the paper (live, rendered):** https://pulkit6732.github.io/rfn-paper/
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20782418.svg)](https://doi.org/10.5281/zenodo.20782418)
+
 Source file: [reversible_faithful_networks.html](./reversible_faithful_networks.html)
 
 > **Status:** Preprint. Pending submission to arXiv (cs.LG).
