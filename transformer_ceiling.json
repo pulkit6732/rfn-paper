@@ -1,0 +1,421 @@
+{
+  "model": "gpt2",
+  "signal": "attention-KL: KL(attn || uniform) avg over layers/heads",
+  "note": "analog of van Dijk 2026 arXiv:2605.05025 \u2014 not the transformer method, same family",
+  "n_questions": 50,
+  "flag_threshold_pctile": 60,
+  "flag_rate": 0.4,
+  "auc": 0.6096,
+  "flag_rate_std": 0.0,
+  "precision_range": 1.0,
+  "A_sweep": [
+    {
+      "A_thr": 0.0,
+      "flag_rate": 0.4,
+      "lie_rate": 1.0,
+      "prec": 1.0,
+      "n_lies": 50
+    },
+    {
+      "A_thr": 1.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.98,
+      "prec": 0.95,
+      "n_lies": 49
+    },
+    {
+      "A_thr": 2.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.9,
+      "prec": 0.85,
+      "n_lies": 45
+    },
+    {
+      "A_thr": 3.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.78,
+      "prec": 0.8,
+      "n_lies": 39
+    },
+    {
+      "A_thr": 5.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.48,
+      "prec": 0.6,
+      "n_lies": 24
+    },
+    {
+      "A_thr": 8.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.2,
+      "prec": 0.2,
+      "n_lies": 10
+    },
+    {
+      "A_thr": 12.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.02,
+      "prec": 0.05,
+      "n_lies": 1
+    },
+    {
+      "A_thr": 18.0,
+      "flag_rate": 0.4,
+      "lie_rate": 0.0,
+      "prec": 0.0,
+      "n_lies": 0
+    }
+  ],
+  "per_question": [
+    {
+      "prompt": "The capital of France is",
+      "correct": "Paris",
+      "score": 1.1863418370485306,
+      "A": 3.4344193935394287,
+      "log_prob": -3.4344193935394287
+    },
+    {
+      "prompt": "The capital of Germany is",
+      "correct": "Berlin",
+      "score": 1.1833775242169697,
+      "A": 2.9426441192626953,
+      "log_prob": -2.9426441192626953
+    },
+    {
+      "prompt": "The capital of Japan is",
+      "correct": "Tokyo",
+      "score": 1.1835675885279973,
+      "A": 2.699026584625244,
+      "log_prob": -2.699026584625244
+    },
+    {
+      "prompt": "The capital of Italy is",
+      "correct": "Rome",
+      "score": 1.183392271399498,
+      "A": 1.8492978811264038,
+      "log_prob": -1.8492978811264038
+    },
+    {
+      "prompt": "The capital of Spain is",
+      "correct": "Madrid",
+      "score": 1.1857515474160512,
+      "A": 2.253671169281006,
+      "log_prob": -2.253671169281006
+    },
+    {
+      "prompt": "The capital of China is",
+      "correct": "Beijing",
+      "score": 1.1835985730091731,
+      "A": 4.090638160705566,
+      "log_prob": -4.090638160705566
+    },
+    {
+      "prompt": "The capital of Russia is",
+      "correct": "Moscow",
+      "score": 1.1855533719062805,
+      "A": 3.6529393196105957,
+      "log_prob": -3.6529393196105957
+    },
+    {
+      "prompt": "The capital of Canada is",
+      "correct": "Ottawa",
+      "score": 1.1858487377564113,
+      "A": 5.25026273727417,
+      "log_prob": -5.25026273727417
+    },
+    {
+      "prompt": "The Eiffel Tower is located in",
+      "correct": "Paris",
+      "score": 1.5580888489882152,
+      "A": 4.743846893310547,
+      "log_prob": -4.743846893310547
+    },
+    {
+      "prompt": "Albert Einstein was born in",
+      "correct": "1879",
+      "score": 1.1726297338803608,
+      "A": 1.6348716020584106,
+      "log_prob": -1.6348716020584106
+    },
+    {
+      "prompt": "The chemical symbol for gold is",
+      "correct": "Au",
+      "score": 1.2690069476763408,
+      "A": 9.50462532043457,
+      "log_prob": -9.50462532043457
+    },
+    {
+      "prompt": "The chemical symbol for iron is",
+      "correct": "Fe",
+      "score": 1.2691564460595448,
+      "A": 6.791275978088379,
+      "log_prob": -6.791275978088379
+    },
+    {
+      "prompt": "Shakespeare wrote",
+      "correct": "Hamlet",
+      "score": 0.8696457942326864,
+      "A": 8.429115295410156,
+      "log_prob": -8.429115295410156
+    },
+    {
+      "prompt": "The planet closest to the Sun is",
+      "correct": "Mercury",
+      "score": 1.3529907961686451,
+      "A": 4.415338516235352,
+      "log_prob": -4.415338516235352
+    },
+    {
+      "prompt": "The largest planet in the solar system is",
+      "correct": "Jupiter",
+      "score": 1.470946619908015,
+      "A": 3.505692481994629,
+      "log_prob": -3.505692481994629
+    },
+    {
+      "prompt": "The Amazon River is in South",
+      "correct": "America",
+      "score": 1.3109329640865326,
+      "A": 2.107269525527954,
+      "log_prob": -2.107269525527954
+    },
+    {
+      "prompt": "The Nile River is in",
+      "correct": "Africa",
+      "score": 1.182892729838689,
+      "A": 6.054207801818848,
+      "log_prob": -6.054207801818848
+    },
+    {
+      "prompt": "The boiling point of water is 100 degrees",
+      "correct": "Celsius",
+      "score": 1.463109940290451,
+      "A": 1.7248321771621704,
+      "log_prob": -1.7248321771621704
+    },
+    {
+      "prompt": "The Battle of Hastings took place in",
+      "correct": "1066",
+      "score": 1.4095253149668376,
+      "A": 4.969775199890137,
+      "log_prob": -4.969775199890137
+    },
+    {
+      "prompt": "The atomic number of carbon is",
+      "correct": "6",
+      "score": 1.2642980913321178,
+      "A": 4.478646278381348,
+      "log_prob": -4.478646278381348
+    },
+    {
+      "prompt": "The atomic number of oxygen is",
+      "correct": "8",
+      "score": 1.2624042828877766,
+      "A": 4.6135759353637695,
+      "log_prob": -4.6135759353637695
+    },
+    {
+      "prompt": "Mount Everest is the tallest mountain in the",
+      "correct": "world",
+      "score": 1.4174180428187053,
+      "A": 0.19772547483444214,
+      "log_prob": -0.19772547483444214
+    },
+    {
+      "prompt": "DNA stands for deoxyrib",
+      "correct": "onucleic",
+      "score": 1.3730341692765553,
+      "A": 15.319600105285645,
+      "log_prob": -15.319600105285645
+    },
+    {
+      "prompt": "The speed of sound in air is approximately",
+      "correct": "340",
+      "score": 1.4521267612775166,
+      "A": 7.810232162475586,
+      "log_prob": -7.810232162475586
+    },
+    {
+      "prompt": "The capital of New Zealand is",
+      "correct": "Wellington",
+      "score": 1.3095627029736836,
+      "A": 4.605578422546387,
+      "log_prob": -4.605578422546387
+    },
+    {
+      "prompt": "The capital of Brazil is",
+      "correct": "Bras",
+      "score": 1.1874062369267147,
+      "A": 4.575825214385986,
+      "log_prob": -4.575825214385986
+    },
+    {
+      "prompt": "The capital of Australia is",
+      "correct": "Can",
+      "score": 1.1843388726313908,
+      "A": 10.910036087036133,
+      "log_prob": -10.910036087036133
+    },
+    {
+      "prompt": "The chemical symbol for silver is",
+      "correct": "Ag",
+      "score": 1.268602728843689,
+      "A": 8.379240036010742,
+      "log_prob": -8.379240036010742
+    },
+    {
+      "prompt": "The Treaty of Westphalia was signed in",
+      "correct": "1648",
+      "score": 1.597556362549464,
+      "A": 2.6832399368286133,
+      "log_prob": -2.6832399368286133
+    },
+    {
+      "prompt": "Pythagoras was born around",
+      "correct": "570",
+      "score": 1.4894427557786305,
+      "A": 6.447074890136719,
+      "log_prob": -6.447074890136719
+    },
+    {
+      "prompt": "The atomic number of gold is",
+      "correct": "79",
+      "score": 1.2571779787540436,
+      "A": 7.309444904327393,
+      "log_prob": -7.309444904327393
+    },
+    {
+      "prompt": "The speed of light is approximately 3 times 10 to the power of",
+      "correct": "8",
+      "score": 1.6985890865325928,
+      "A": 7.258033752441406,
+      "log_prob": -7.258033752441406
+    },
+    {
+      "prompt": "Photosynthesis produces",
+      "correct": "oxygen",
+      "score": 0.8377739091714224,
+      "A": 4.848339080810547,
+      "log_prob": -4.848339080810547
+    },
+    {
+      "prompt": "The chemical formula for sulfuric acid is H",
+      "correct": "2",
+      "score": 1.513578474521637,
+      "A": 1.2041109800338745,
+      "log_prob": -1.2041109800338745
+    },
+    {
+      "prompt": "The melting point of iron is approximately",
+      "correct": "1538",
+      "score": 1.3701942960421245,
+      "A": 4.426962375640869,
+      "log_prob": -4.426962375640869
+    },
+    {
+      "prompt": "The capital of Argentina is",
+      "correct": "Buenos",
+      "score": 1.1841486543416977,
+      "A": 3.8522064685821533,
+      "log_prob": -3.8522064685821533
+    },
+    {
+      "prompt": "The highest mountain in Africa is",
+      "correct": "Kiliman",
+      "score": 1.2897185285886128,
+      "A": 7.10282564163208,
+      "log_prob": -7.10282564163208
+    },
+    {
+      "prompt": "The longest river in Asia is the",
+      "correct": "Yangtze",
+      "score": 1.3667738536993663,
+      "A": 2.8965210914611816,
+      "log_prob": -2.8965210914611816
+    },
+    {
+      "prompt": "The human body has",
+      "correct": "206",
+      "score": 1.0661995460589726,
+      "A": 11.010631561279297,
+      "log_prob": -11.010631561279297
+    },
+    {
+      "prompt": "The capital of South Korea is",
+      "correct": "Seoul",
+      "score": 1.3226960102717082,
+      "A": 3.6451008319854736,
+      "log_prob": -3.6451008319854736
+    },
+    {
+      "prompt": "The capital of Burkina Faso is",
+      "correct": "Ouag",
+      "score": 1.5311967829863231,
+      "A": 6.16961669921875,
+      "log_prob": -6.16961669921875
+    },
+    {
+      "prompt": "The capital of Kyrgyzstan is",
+      "correct": "Bish",
+      "score": 1.5390789806842804,
+      "A": 6.043239593505859,
+      "log_prob": -6.043239593505859
+    },
+    {
+      "prompt": "The capital of Eritrea is",
+      "correct": "Asmar",
+      "score": 1.318712701400121,
+      "A": 10.059818267822266,
+      "log_prob": -10.059818267822266
+    },
+    {
+      "prompt": "The capital of Tajikistan is",
+      "correct": "Dush",
+      "score": 1.4178619583447774,
+      "A": 5.99581241607666,
+      "log_prob": -5.99581241607666
+    },
+    {
+      "prompt": "The capital of Turkmenistan is",
+      "correct": "Ashgab",
+      "score": 1.427592118581136,
+      "A": 9.058306694030762,
+      "log_prob": -9.058306694030762
+    },
+    {
+      "prompt": "The capital of Mozambique is",
+      "correct": "Map",
+      "score": 1.4462025165557861,
+      "A": 10.29185962677002,
+      "log_prob": -10.29185962677002
+    },
+    {
+      "prompt": "The population of Iceland is approximately",
+      "correct": "370",
+      "score": 1.2748881181081135,
+      "A": 7.744739532470703,
+      "log_prob": -7.744739532470703
+    },
+    {
+      "prompt": "The GDP of Luxembourg in 2020 was approximately",
+      "correct": "73",
+      "score": 1.403276393810908,
+      "A": 7.257789611816406,
+      "log_prob": -7.257789611816406
+    },
+    {
+      "prompt": "The capital of Papua New Guinea is",
+      "correct": "Port",
+      "score": 1.4219021896521251,
+      "A": 8.050806045532227,
+      "log_prob": -8.050806045532227
+    },
+    {
+      "prompt": "The capital of Vanuatu is",
+      "correct": "Port",
+      "score": 1.4434191087881725,
+      "A": 7.906500339508057,
+      "log_prob": -7.906500339508057
+    }
+  ]
+}

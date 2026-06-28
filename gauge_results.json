@@ -1,0 +1,30 @@
+{
+  "attack1_gauge_twin": {
+    "prediction_gap (should ~0: identical model behaviour)": 1.509903313490213e-14,
+    "twin_reconstructs_input_gap (should ~0: PASSES the certificate)": 1.199040866595169e-14,
+    "original_rfn_reconstruct_gap (its headline ~1e-15)": 1.3322676295501878e-15,
+    "twin_faithfulness_sum_gap (should ~0: twin is ALSO exactly additive)": 5.10702591327572e-15,
+    "true_faithfulness_sum_gap": 2.220446049250313e-16,
+    "RELATIVE_ATTRIBUTION_DIFFERENCE (should be LARGE: different story)": 16.887586498172116,
+    "top_feature_flip_rate (fraction of inputs whose #1 feature changed)": 0.96875
+  },
+  "attack2_determinant_blindness": {
+    "|det S| (should be 1: passes EVERY determinant/net-entropy test)": 1.0000000000000004,
+    "L_det = |log|det|| (determinant-lie, reads ~0)": 4.440892098500625e-16,
+    "L_attr = sum|log sigma_i| (attribution-lie, LARGE despite det=1)": 5.163229426638615,
+    "prediction_gap (still identical)": 1.2771034230141254e-14,
+    "twin_reconstructs_input_gap (still passes reversibility)": 1.3655743202889425e-14,
+    "RELATIVE_ATTRIBUTION_DIFFERENCE (large => det-test is blind to it)": 16.8875864981721
+  },
+  "repair_diagonal_gauge_fixed": {
+    "prediction_gap (identical)": 5.689893001203927e-16,
+    "RELATIVE_ATTRIBUTION_DIFFERENCE under DIAGONAL gauge (should ~0: UNIQUE again)": 9.203628236104217e-17,
+    "interpretation": "diagonal/additive (no feature mixing) is the REAL certificate; the contribution c_i=w_i*phi_i is the gauge-invariant product."
+  },
+  "VERDICT": {
+    "attack1_reversibility_does_NOT_pin_attribution": true,
+    "attack2_determinant_test_is_blind_to_attribution_lie": true,
+    "repair_additivity_restores_uniqueness": true,
+    "ALL": true
+  }
+}

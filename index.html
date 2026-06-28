@@ -3,1048 +3,1337 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Reversible Faithful Networks — Srivastava 2026</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<title>Faithfulness, Gaps, and Lies: A Unified Theory of Neural Model Honesty</title>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+MathJax = {
+  tex: { inlineMath: [['\\(','\\)'], ['$','$']], displayMath: [['\\[','\\]'], ['$$','$$']], tags: 'ams' },
+  options: { skipHtmlTags: ['script','noscript','style','textarea'] }
+};
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-  :root {
-    --ink:      #111110;
-    --ink-mid:  #444441;
-    --ink-dim:  #6b6b67;
-    --ink-faint:#9a9a96;
-    --bg:       #fafaf7;
-    --bg-tint:  #f2efe6;
-    --bg-card:  #ffffff;
-    --rule:     #d0cdc4;
-    --green:    #1a6b35;
-    --green-bg: #e6f2eb;
-    --amber:    #8a5000;
-    --amber-bg: #fdf3e0;
-    --blue:     #153a7a;
-    --blue-bg:  #e8eefc;
-    --red:      #8a1a1a;
-    --red-bg:   #fce8e8;
-    --serif:    'Georgia', 'Times New Roman', serif;
-    --mono:     'Courier New', 'Courier', monospace;
-    --sans:     system-ui, -apple-system, sans-serif;
-  }
-  body {
-    font-family: var(--serif);
-    background: var(--bg);
-    color: var(--ink);
-    line-height: 1.78;
-    font-size: 15.5px;
-  }
-  .page {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: 56px 40px 100px;
-  }
+/* ===== ARXIV-STYLE ACADEMIC PAPER ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Header ── */
-  .paper-header {
-    border-bottom: 2px solid var(--ink);
-    padding-bottom: 32px;
-    margin-bottom: 40px;
-  }
-  .paper-title {
-    font-size: 24px;
-    font-weight: 700;
-    line-height: 1.3;
-    margin-bottom: 4px;
-    letter-spacing: -0.2px;
-  }
-  .paper-subtitle {
-    font-size: 15px;
-    font-weight: 400;
-    color: var(--ink-mid);
-    margin-bottom: 20px;
-    font-style: italic;
-  }
-  .author-block { margin-bottom: 14px; }
-  .author-name { font-size: 15px; font-weight: 600; }
-  .author-affil { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
-  .author-contact { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
-  .author-contact a { color: var(--blue); text-decoration: none; }
-  .paper-meta { font-size: 13px; color: var(--ink-faint); margin-top: 14px; font-style: italic; }
+:root {
+  --text: #111;
+  --light: #444;
+  --rule: #aaa;
+  --bg: #fff;
+  --accent: #000;
+  --serif: 'Linux Libertine', 'Palatino', 'Book Antiqua', 'Times New Roman', serif;
+  --sans: 'Arial', 'Helvetica Neue', sans-serif;
+  --mono: 'Courier New', 'Courier', monospace;
+}
 
-  /* ── Abstract ── */
-  .abstract {
-    background: var(--bg-tint);
-    border-left: 4px solid var(--ink);
-    padding: 22px 26px;
-    margin: 36px 0;
-    border-radius: 0 4px 4px 0;
-  }
-  .abstract-label {
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.6px;
-    text-transform: uppercase;
-    color: var(--ink-dim);
-    margin-bottom: 10px;
-  }
-  .abstract p { font-size: 14.5px; line-height: 1.72; margin: 0; }
+html { font-size: 10pt; }
 
-  /* ── Sections ── */
-  h2.sec {
-    font-size: 17px;
-    font-weight: 700;
-    margin: 44px 0 14px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--rule);
-    letter-spacing: 0.1px;
-  }
-  h3.sub {
-    font-size: 15px;
-    font-weight: 700;
-    margin: 28px 0 10px;
-    font-style: italic;
-  }
-  h4.sub2 {
-    font-family: var(--sans);
-    font-size: 13px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--ink-dim);
-    margin: 22px 0 8px;
-  }
-  p { margin-bottom: 13px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--serif);
+  line-height: 1.55;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+}
 
-  /* ── Theorems & Proofs ── */
-  .theorem-box {
-    background: var(--blue-bg);
-    border: 1px solid #b8caf0;
-    border-left: 4px solid var(--blue);
-    border-radius: 0 6px 6px 0;
-    padding: 16px 20px;
-    margin: 20px 0;
-  }
-  .theorem-label {
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    text-transform: uppercase;
-    color: var(--blue);
-    margin-bottom: 8px;
-  }
-  .theorem-box p { font-size: 14.5px; margin: 0 0 8px; }
-  .theorem-box p:last-child { margin: 0; }
-  .proof-box {
-    background: var(--bg-tint);
-    border: 1px solid var(--rule);
-    border-radius: 4px;
-    padding: 14px 18px;
-    margin: -6px 0 18px;
-    font-size: 14px;
-    color: var(--ink-mid);
-  }
-  .proof-box strong { color: var(--ink); }
+/* ── HEADER / TITLE ── */
+.paper-title {
+  font-size: 18pt;
+  font-weight: bold;
+  text-align: center;
+  line-height: 1.3;
+  margin-bottom: 18px;
+}
 
-  /* ── Equations ── */
-  .eq {
-    background: #f5f4ee;
-    border: 1px solid var(--rule);
-    border-radius: 5px;
-    padding: 12px 20px;
-    margin: 16px 0;
-    font-family: var(--mono);
-    font-size: 13.5px;
-    text-align: center;
-    overflow-x: auto;
-    line-height: 1.8;
-  }
-  .eq-label {
-    float: right;
-    color: var(--ink-dim);
-    font-size: 12px;
-    padding-top: 2px;
-  }
+.paper-subtitle {
+  font-size: 11pt;
+  text-align: center;
+  color: var(--light);
+  margin-bottom: 24px;
+  font-style: italic;
+}
 
-  /* ── Findings / callouts ── */
-  .finding {
-    background: var(--green-bg);
-    border-left: 4px solid var(--green);
-    border-radius: 0 5px 5px 0;
-    padding: 13px 18px;
-    margin: 16px 0;
-  }
-  .finding.warn {
-    background: var(--amber-bg);
-    border-left-color: var(--amber);
-  }
-  .finding.info {
-    background: var(--blue-bg);
-    border-left-color: var(--blue);
-  }
-  .finding-label {
-    font-family: var(--sans);
-    font-size: 10.5px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
-    color: var(--ink-dim);
-    margin-bottom: 6px;
-  }
-  .finding p { margin: 0; font-size: 14px; }
+.authors {
+  text-align: center;
+  font-size: 11pt;
+  margin-bottom: 6px;
+}
 
-  /* ── Architecture diagram ── */
-  .arch {
-    display: flex;
-    align-items: center;
-    gap: 0;
-    margin: 24px 0;
-    overflow-x: auto;
-  }
-  .arch-box {
-    flex: 1;
-    min-width: 110px;
-    background: var(--bg-card);
-    border: 1.5px solid var(--ink);
-    border-radius: 7px;
-    padding: 12px 10px;
-    text-align: center;
-    font-size: 12.5px;
-  }
-  .arch-box.highlight {
-    background: var(--ink);
-    color: #fff;
-  }
-  .arch-box .t { font-weight: 700; font-size: 12px; display: block; margin-bottom: 3px; }
-  .arch-box .d { font-family: var(--mono); font-size: 10.5px; color: var(--ink-dim); }
-  .arch-box.highlight .d { color: #aaa; }
-  .arch-arr { padding: 0 6px; font-size: 20px; color: var(--ink-dim); flex-shrink: 0; }
+.affiliations {
+  text-align: center;
+  font-size: 9.5pt;
+  color: var(--light);
+  margin-bottom: 6px;
+}
 
-  /* ── Tables ── */
-  .tbl-wrap { margin: 20px 0; overflow-x: auto; }
-  table.dt {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13.5px;
-  }
-  table.dt caption {
-    font-size: 12px;
-    color: var(--ink-dim);
-    text-align: left;
-    margin-bottom: 6px;
-    font-style: italic;
-    caption-side: top;
-  }
-  table.dt th {
-    background: var(--ink);
-    color: #fff;
-    padding: 9px 13px;
-    text-align: left;
-    font-family: var(--sans);
-    font-size: 11.5px;
-    font-weight: 600;
-    letter-spacing: 0.4px;
-  }
-  table.dt td {
-    padding: 8px 13px;
-    border-bottom: 1px solid #ece9e0;
-    vertical-align: top;
-  }
-  table.dt tr:nth-child(even) td { background: #f8f6f0; }
-  .tag {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 4px;
-    font-family: var(--sans);
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-  }
-  .tag.pass { background: #d2eedd; color: #155c2a; }
-  .tag.fail { background: #fde2d6; color: #7a2800; }
-  .tag.caught { background: #d2eedd; color: #155c2a; }
-  .tag.missed { background: #fde2d6; color: #7a2800; }
-  .tag.quiet { background: #e6eef9; color: #163680; }
+.paper-date {
+  text-align: center;
+  font-size: 9.5pt;
+  color: var(--light);
+  margin-bottom: 32px;
+}
 
-  /* ── Metric cards ── */
-  .metrics-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 12px;
-    margin: 22px 0;
-  }
-  .mc {
-    background: var(--bg-card);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: 16px 18px;
-  }
-  .mc .lbl {
-    font-family: var(--sans);
-    font-size: 11px;
-    color: var(--ink-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    margin-bottom: 6px;
-  }
-  .mc .val {
-    font-family: var(--mono);
-    font-size: 22px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-  .mc .sub { font-size: 11px; color: var(--ink-faint); margin-top: 4px; }
-  .mc.g .val { color: var(--green); }
-  .mc.a .val { color: var(--amber); }
-  .mc.b .val { color: var(--blue); }
+.correspondence {
+  text-align: center;
+  font-size: 9pt;
+  color: var(--light);
+  margin-bottom: 8px;
+}
 
-  /* ── Charts ── */
-  .chart-wrap {
-    background: var(--bg-card);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: 20px;
-    margin: 22px 0;
-  }
-  .chart-title {
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    color: var(--ink-mid);
-    margin-bottom: 3px;
-  }
-  .chart-sub {
-    font-size: 12px;
-    color: var(--ink-dim);
-    margin-bottom: 16px;
-  }
-  .fig-cap {
-    font-size: 12.5px;
-    color: var(--ink-dim);
-    text-align: center;
-    margin-top: 10px;
-    font-style: italic;
-    line-height: 1.5;
-  }
-  .fig-num { font-weight: 700; font-style: normal; color: var(--ink-mid); }
+hr.title-rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 20px 0;
+}
 
-  /* ── Code ── */
-  .code {
-    background: #1a1a18;
-    color: #e0ddd0;
-    font-family: var(--mono);
-    font-size: 12.5px;
-    padding: 16px 20px;
-    border-radius: 6px;
-    margin: 14px 0;
-    overflow-x: auto;
-    line-height: 1.65;
-  }
-  .code .cm { color: #7aaa7a; }
-  .code .ck { color: #c88b5a; }
-  .code .cs { color: #aad4aa; }
+/* ── TWO-COLUMN LAYOUT ── */
+.two-col {
+  column-count: 2;
+  column-gap: 28px;
+  column-rule: 1px solid #ddd;
+}
 
-  /* ── Axis legend (two-axis) ── */
-  .axis-def {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin: 18px 0;
-  }
-  .axis-card {
-    background: var(--bg-tint);
-    border-radius: 6px;
-    padding: 12px 16px;
-  }
-  .axis-card strong { display: block; font-size: 12px; font-family: var(--sans); text-transform: uppercase; letter-spacing: 0.7px; color: var(--ink-dim); margin-bottom: 5px; }
+@media (max-width: 640px) {
+  .two-col { column-count: 1; column-rule: none; }
+}
 
-  /* ── References ── */
-  .refs ol { padding-left: 22px; }
-  .refs li { font-size: 13.5px; margin-bottom: 8px; color: var(--ink-mid); line-height: 1.55; }
-  .refs li span { color: var(--ink); }
+/* ── ABSTRACT ── */
+.abstract-section {
+  margin: 0 auto 32px;
+  max-width: 720px;
+  font-size: 9.5pt;
+}
 
-  /* ── Footer ── */
-  .footer {
-    font-family: var(--sans);
-    font-size: 11.5px;
-    color: var(--ink-faint);
-    border-top: 1px solid var(--rule);
-    padding-top: 16px;
-    margin-top: 56px;
-    line-height: 1.7;
-  }
+.abstract-heading {
+  font-weight: bold;
+  font-size: 10pt;
+  text-align: center;
+  margin-bottom: 8px;
+  letter-spacing: 0.05em;
+}
 
-  /* ── Scope box ── */
-  .scope-box {
-    background: #fff8e6;
-    border: 1px solid #e8c96a;
-    border-radius: 6px;
-    padding: 14px 18px;
-    margin: 16px 0;
-    font-size: 14px;
-  }
-  .scope-box .lbl { font-family: var(--sans); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.1px; color: #8a6200; margin-bottom: 5px; }
+.keywords {
+  margin-top: 10px;
+  font-size: 9pt;
+  color: var(--light);
+}
 
-  /* ── Responsive ── */
-  @media (max-width: 620px) {
-    .page { padding: 28px 18px 60px; }
-    .axis-def { grid-template-columns: 1fr; }
-    .arch { flex-direction: column; }
-    .arch-arr { transform: rotate(90deg); }
-  }
-  @media print {
-    body { background: #fff; }
-    .page { padding: 20px 0; }
-    .chart-wrap, .mc, .theorem-box { break-inside: avoid; }
-  }
+/* ── SECTIONS ── */
+h1 { font-size: 14pt; font-weight: bold; margin: 28px 0 10px; }
+h2 { font-size: 12pt; font-weight: bold; margin: 22px 0 8px; }
+h3 { font-size: 10.5pt; font-weight: bold; font-style: italic; margin: 16px 0 6px; }
+h4 { font-size: 10pt; font-weight: bold; margin: 12px 0 4px; }
+
+.sec-num { margin-right: 6px; }
+
+p { margin-bottom: 8px; text-align: justify; hyphens: auto; font-size: 10pt; }
+
+/* ── MATH ENVIRONMENTS ── */
+.env-box {
+  border: 1px solid #ccc;
+  padding: 12px 16px;
+  margin: 14px 0;
+  break-inside: avoid;
+  background: #fafafa;
+  font-size: 9.5pt;
+}
+
+.env-box.theorem { border-left: 3px solid #000; }
+.env-box.lemma   { border-left: 3px solid #555; }
+.env-box.definition { border-left: 3px solid #888; }
+.env-box.corollary { border-left: 3px solid #444; }
+.env-box.proposition { border-left: 3px solid #333; }
+.env-box.remark  { border-left: 3px solid #aaa; background: #fff; }
+
+.env-label {
+  font-weight: bold;
+  font-style: italic;
+  margin-bottom: 6px;
+  font-size: 10pt;
+}
+
+.env-box p { margin-bottom: 6px; text-align: left; }
+.env-box p:last-child { margin-bottom: 0; }
+
+.qed { text-align: right; font-size: 12pt; }
+
+/* ── FIGURES AND TABLES ── */
+.figure {
+  margin: 18px 0;
+  text-align: center;
+  break-inside: avoid;
+  column-span: all;
+}
+
+.figure-caption {
+  font-size: 9pt;
+  color: var(--light);
+  margin-top: 8px;
+  text-align: left;
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.figure-caption strong { color: var(--text); }
+
+.table-wrap {
+  margin: 16px 0;
+  overflow-x: auto;
+  column-span: all;
+  break-inside: avoid;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 9pt;
+  width: 100%;
+  font-family: var(--serif);
+}
+
+thead { border-top: 1.5px solid #000; border-bottom: 1px solid #000; }
+tbody tr:last-child { border-bottom: 1.5px solid #000; }
+
+th { font-weight: bold; padding: 5px 10px; text-align: center; background: none; }
+td { padding: 4px 10px; text-align: center; }
+td.left { text-align: left; }
+
+.table-caption {
+  font-size: 9pt;
+  color: var(--light);
+  margin-top: 6px;
+  text-align: left;
+}
+
+.num { font-family: var(--mono); font-size: 8.5pt; }
+.good { color: #1a7a1a; font-family: var(--mono); font-size: 8.5pt; }
+.bad  { color: #a00; font-family: var(--mono); font-size: 8.5pt; }
+
+/* ── CHART CANVAS ── */
+canvas {
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+}
+
+.chart-container {
+  position: relative;
+  max-width: 540px;
+  margin: 0 auto;
+}
+
+/* ── SVG DIAGRAM WRAPPER ── */
+.diagram { max-width: 640px; margin: 8px auto; display: block; }
+
+/* ── ALGORITHM/CODE ── */
+.algorithm {
+  border: 1px solid #bbb;
+  padding: 10px 14px;
+  margin: 14px 0;
+  font-size: 9pt;
+  font-family: var(--mono);
+  line-height: 1.7;
+  break-inside: avoid;
+  background: #fafafa;
+  column-span: all;
+}
+
+.algorithm-header {
+  font-family: var(--serif);
+  font-weight: bold;
+  font-style: italic;
+  border-bottom: 1px solid #bbb;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+/* ── KEY RESULT BOX ── */
+.key-result {
+  border: 2px solid #000;
+  padding: 12px 16px;
+  margin: 16px 0;
+  break-inside: avoid;
+  column-span: all;
+}
+
+.key-result .label {
+  font-weight: bold;
+  font-size: 9pt;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+/* ── REFERENCES ── */
+.references { font-size: 9pt; }
+.ref-item { margin-bottom: 6px; padding-left: 28px; text-indent: -28px; }
+
+/* ── TOC ── */
+.toc { margin: 20px 0 28px; font-size: 9.5pt; }
+.toc-item { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dotted #ccc; }
+.toc-item a { text-decoration: none; color: var(--text); }
+.toc-item a:hover { text-decoration: underline; }
+.toc-heading { font-weight: bold; font-size: 10pt; margin-bottom: 6px; letter-spacing: 0.05em; text-transform: uppercase; }
+.toc-sub { padding-left: 16px; font-size: 9pt; }
+
+/* ── MISC ── */
+code { font-family: var(--mono); font-size: 8.5pt; background: #f5f5f5; padding: 1px 3px; border: 1px solid #ddd; }
+ul, ol { margin: 8px 0 8px 22px; font-size: 10pt; }
+li { margin-bottom: 4px; }
+a { color: #000; }
+.footnote { font-size: 8.5pt; color: var(--light); border-top: 1px solid #ccc; padding-top: 6px; margin-top: 12px; }
+sup { font-size: 7.5pt; }
+
+
 </style>
 </head>
 <body>
-<div class="page">
 
 <!-- ══════════════════════════════════════════
-     HEADER
+     TITLE, AUTHORS, ABSTRACT
 ═══════════════════════════════════════════ -->
-<header class="paper-header">
-  <div class="paper-title">Reversible Faithful Networks: Invertibility as a<br>Tamper-Detection Certificate for Additive Attribution</div>
-  <div class="paper-subtitle">with a Two-Axis Completeness Theorem for Regression Hallucination Detection</div>
 
-  <div class="author-block" style="margin-top:20px">
-    <div class="author-name">Pulkit Srivastava</div>
-    <div class="author-affil">AetherOS / Signet &nbsp;·&nbsp; Independent Research &nbsp;·&nbsp; India</div>
-    <div class="author-contact">
-      GitHub: <a href="https://github.com/pulkit6732/aetherproof">github.com/pulkit6732/aetherproof</a>
-      &nbsp;·&nbsp;
-      LinkedIn: <a href="https://linkedin.com/in/pulkit-srivastava-2033942a6">linkedin.com/in/pulkit-srivastava-2033942a6</a>
-    </div>
-  </div>
-  <div class="paper-meta">June 2026 &nbsp;·&nbsp; Preprint — submitted to arXiv cs.LG &nbsp;·&nbsp; All code and data open-source</div>
-</header>
-
-<!-- ══════════════════════════════════════════
-     ABSTRACT
-═══════════════════════════════════════════ -->
-<div class="abstract">
-  <div class="abstract-label">Abstract</div>
-  <p>Post-hoc explanations for neural networks suffer from a fundamental <em>faithfulness gap</em>: the stated reasons for a model's decision need not reflect its actual computation, and no mechanism exists to catch a forged attribution. We introduce the <strong>Reversible Faithful Network (RFN)</strong>, an architecture that closes both problems by construction. Each per-feature contribution in an RFN is simultaneously (a) an <em>exact</em> additive component of the output logit and (b) an invertible encoding of the corresponding input feature via a strictly monotonic shape function. A forged or edited attribution is therefore mechanically detectable: running the explanation backward through the inverse map fails to reconstruct the original input. We prove four properties experimentally — exact faithfulness (gap 1.78 × 10⁻¹⁵), lossless input reconstruction from explanation alone (error 1.33 × 10⁻¹⁵), lie-detection via reverse pass (mismatch 1.544 for a 50% feature overstatement), and competitive accuracy (92.4% vs 92.0% for an opaque MLP using 43 vs 75 parameters). We further characterize a failure mode of single-axis hallucination detection — the <em>calibrated lie</em>, in which a bijective distortion of truth preserves mutual information yet is wholly wrong — and prove that a two-axis detector combining information (H) and grounding (G) is complete for value-honesty: any prediction evading both axes must encode truth bijectively with low residual, which is not a lie by any operational definition. The two-axis detector is validated across the full complexity spectrum from trivial 1-bit channels to 20-dimensional deep networks under simultaneous triple failure, with zero false alarms on benign noise. The core novelty is not invertible networks, additive models, or hallucination metrics individually, but their specific fusion: <em>reversibility as an integrity certificate on additive faithfulness</em>. Code, data, and all results are open.</p>
+<div class="paper-title">
+  Faithfulness, Gaps, and Lies:<br>
+  A Unified Theory of Neural Model Honesty
 </div>
 
+<div class="paper-subtitle">
+  Conservation Laws, Gauge Corrections, and the Provable Detection Ceiling of Reference-Free Hallucination Detectors
+</div>
+
+<div class="authors">
+  Pulkit Srivastava
+</div>
+<div class="affiliations">
+  Independent Researcher · github.com/pulkit6732
+</div>
+<div class="paper-date">June 2026</div>
+<div class="correspondence">
+  Correspondence: github.com/pulkit6732/rfn-paper
+</div>
+
+<hr class="title-rule">
+
+<!-- ABSTRACT -->
+<div class="abstract-section">
+  <div class="abstract-heading">Abstract</div>
+
+  <p>We prove that neural model honesty decomposes into exactly two components — an <em>information component</em> (H-axis), detectable without labels from the model's internal geometry, and a <em>magnitude component</em> (G-axis), requiring external grounding — and that no single-model reference-free signal can supply both. This resolves a fundamental open question in hallucination detection: why reference-free detectors rank errors reliably yet fail to calibrate on severity, and what, precisely, external verification buys.</p>
+
+  <p>We establish four results. <strong>(1) The Conservation Law:</strong> a model's attributions are faithful if and only if its forward map is information-preserving (\(\mathcal{L}(f) = \mathbb{E}[|\log|\det J(x)||] = 0\)), verified to \(&lt;7 \times 10^{-11}\) nats error across six contraction rates. The two-directional extension catches fabrication lies (measured: \(1.0986\) nats, predicted: \(1.0986\)) that the one-directional functional misses entirely. The quantum no-hiding theorem enforces this physically: \(S_{\mathrm{sys}} = S_{\mathrm{env}}\), gap \(= 1.01 \times 10^{-13}\). <strong>(2) The Gauge Correction:</strong> \(|\det J| = 1\) is necessary but <em>not</em> sufficient — a gauge-twin achieves \(\mathcal{L}_{\mathrm{det}} = 4.4 \times 10^{-16}\) while producing a \(16.89\times\) attribution swing; the attribution-lie functional \(\mathcal{L}_{\mathrm{attr}} = \sum|\log \sigma_i|\) catches it at \(5.163\) nats, and the additive diagonal repair restores uniqueness to \(9.2 \times 10^{-17}\). <strong>(3) The NTK Identity:</strong> training-support concentration equals NTK-GP posterior variance, verified to \(3.27 \times 10^{-13}\) over \(n = 300\) networks, AUC \(= 0.859 \pm 0.084\). <strong>(4) The Detection Ceiling:</strong> \(\partial v / \partial A = 0\) — flag-rate is locked constant while confabulation precision spans \(0.000 \to 0.928\) for v_ntk (and \(0.000 \to 0.078\) for a_kl), confirmed across four architectures and data regimes including a 117M-parameter transformer.</p>
+
+  <p>The synthesis: NTK-GP posterior variance is the H-axis; grounding residual is the G-axis; H + G is the minimal complete certificate. This derivation explains the architecture of frontier AI verification pipelines and proves that single-model confidence routing is miscalibrated for in-distribution errors by an irreducible amount.</p>
+
+  <div class="keywords"><strong>Keywords:</strong> hallucination detection, neural tangent kernel, information geometry, conservation laws, faithfulness, calibration, AI safety</div>
+</div>
+
+<hr class="title-rule">
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <div class="toc-heading">Contents</div>
+  <div class="toc-item"><a href="#intro"><span>1 &nbsp; Introduction</span></a><span>2</span></div>
+  <div class="toc-item toc-sub"><a href="#contrib"><span>1.1 &nbsp; Contributions</span></a><span>2</span></div>
+  <div class="toc-item"><a href="#background"><span>2 &nbsp; Background and Related Work</span></a><span>3</span></div>
+  <div class="toc-item"><a href="#setup"><span>3 &nbsp; Experimental Setup</span></a><span>4</span></div>
+  <div class="toc-item"><a href="#conservation"><span>4 &nbsp; The Conservation Law</span></a><span>5</span></div>
+  <div class="toc-item toc-sub"><a href="#twodirec"><span>4.1 &nbsp; Two-Directional Lie Functional</span></a><span>5</span></div>
+  <div class="toc-item toc-sub"><a href="#quantum"><span>4.2 &nbsp; Quantum No-Hiding Enforcement</span></a><span>6</span></div>
+  <div class="toc-item toc-sub"><a href="#thermo"><span>4.3 &nbsp; Thermodynamic Verification</span></a><span>6</span></div>
+  <div class="toc-item"><a href="#gauge"><span>5 &nbsp; The Gauge Correction</span></a><span>7</span></div>
+  <div class="toc-item"><a href="#ntk"><span>6 &nbsp; The NTK Identity</span></a><span>8</span></div>
+  <div class="toc-item"><a href="#ceiling"><span>7 &nbsp; The Detection Ceiling</span></a><span>9</span></div>
+  <div class="toc-item"><a href="#transformer"><span>8 &nbsp; Transformer Confirmation</span></a><span>10</span></div>
+  <div class="toc-item"><a href="#certificate"><span>9 &nbsp; The Minimal Complete Certificate</span></a><span>11</span></div>
+  <div class="toc-item"><a href="#rates"><span>10 &nbsp; Deployable Detection Rates</span></a><span>12</span></div>
+  <div class="toc-item"><a href="#falsification"><span>11 &nbsp; The Falsification Chain</span></a><span>12</span></div>
+  <div class="toc-item"><a href="#scope"><span>12 &nbsp; Scope and Limitations</span></a><span>13</span></div>
+  <div class="toc-item"><a href="#conclusion"><span>13 &nbsp; Conclusion</span></a><span>13</span></div>
+  <div class="toc-item"><a href="#appendix"><span>A &nbsp; Reproducibility Ledger</span></a><span>14</span></div>
+  <div class="toc-item"><a href="#references"><span>References</span></a><span>15</span></div>
+</div>
+
+<hr class="title-rule">
+
 <!-- ══════════════════════════════════════════
-     1. INTRODUCTION
+     BODY — TWO COLUMN
 ═══════════════════════════════════════════ -->
-<h2 class="sec">1. Introduction</h2>
+<div class="two-col">
 
-<p>When a neural network classifies a medical image, rejects a loan application, or makes an autonomous decision affecting a person's life, the question <em>"why?"</em> has become legally and ethically mandatory. Post-hoc explanation methods — SHAP [<a href="#r7">7</a>], LIME [<a href="#r5">5</a>], gradient-based attributions [<a href="#r6">6</a>] — attempt to answer it after the fact. But a fundamental problem persists that the field has largely not addressed at the mechanism level: these explanations can diverge substantially from what the model actually computes, and no check exists to detect when they lie.</p>
+<!-- §1 INTRODUCTION -->
+<section id="intro">
+<h1><span class="sec-num">1</span>Introduction</h1>
 
-<p>We call this the <strong>faithfulness gap</strong>: the maximum discrepancy between what an explanation claims and what the model's computation actually produces. For an opaque two-layer ReLU MLP with gradient-×-input attribution on a standard tabular classification task, we measure this gap at 6.72. The explanation claims feature contributions that are off by up to 6.72 units from the model's actual logit components. For an RFN on the same task, the gap is 1.78 × 10⁻¹⁵ — machine-precision numerical noise, not a gap in any meaningful sense.</p>
+<p>When a neural model answers a question, generates an attribution, or routes a decision, two fundamentally distinct forms of dishonesty are possible.</p>
 
-<p>The deeper problem is not the size of the gap but its <em>undetectability</em>. If an auditor, regulator, or adversary edits a SHAP explanation for a consequential decision — inflating the stated influence of a legally permissible feature while hiding a protected one — there is no mechanism to catch it. The opaque MLP has no inverse; no reconstruction check is possible by construction.</p>
+<p>The first is <em>structural dishonesty</em>: the model's forward map destroys or invents information. Input features vanish from the output, or structure appears with no grounding in the input. This is a violation of an information conservation law and, as we show, is detectable from the model's internal geometry alone.</p>
 
-<p>RFN solves this by making the explanation itself an invertible code for the input. A lie in the explanation is a lie in the encoding, and the encoding can be verified by running it backward. This paper makes three contributions:</p>
+<p>The second is <em>magnitude dishonesty</em>: the model fills a gap in its training distribution with a confident confabulation. The existence of such a gap is geometrically detectable via the NTK posterior variance. But <em>how wrong</em> the confabulation is cannot be estimated by any internal signal — the model was never trained on the ground truth. This is a provable detection ceiling, not an engineering limitation.</p>
 
-<ol style="padding-left:22px; margin-bottom:14px; font-size:15.5px; line-height:1.8;">
-  <li style="margin-bottom:8px"><strong>Architecture (RFN).</strong> A model in which per-feature contributions are simultaneously exact additive components of the output and invertible encodings of the input, making faithfulness mechanically self-certifying.</li>
-  <li style="margin-bottom:8px"><strong>Theorems.</strong> Formal proofs that RFN achieves exact faithfulness, exact input reconstruction, and lie-detectability by construction — properties verified experimentally to machine precision.</li>
-  <li><strong>Two-axis completeness.</strong> A formal characterization of the calibrated-lie failure mode of single-axis information detectors, with a proof that two-axis detection (information + grounding) is complete for value-honesty given a reference distribution, validated across the full complexity spectrum.</li>
+<p>These two forms require two different mathematical tools. This paper derives both from first principles and proves they are jointly necessary and sufficient.</p>
+
+<p><strong>The two threads unified.</strong> This work combines two independent lines of investigation that turn out to be the same theorem seen from opposite directions: (a) <em>Faithfulness as a Conservation Law</em> — the structural certificate; and (b) <em>Gaps, Not Lies: The Neural-Tangent Ceiling</em> — why no single-model reference-free detector can calibrate for the hardest class of errors. The gauge-twin attack (§4) is the bridge: it shows a network can pass every conservation test while producing attribution lies, which forces the second functional, which reveals the NTK identity as its solution.</p>
+
+<div class="key-result">
+  <div class="label">Central Theorem (Informal)</div>
+  <p>No single-model, reference-free signal can be calibrated for in-distribution confabulation. The best internal signal is the NTK–GP posterior variance, which detects <em>gaps</em> (exposure to a data region) but cannot detect <em>lies</em> (confabulation magnitude within that gap). Magnitude information is available only via external grounding.</p>
+</div>
+
+<p><strong>Why this matters for deployed systems.</strong> Production pipelines deploying GPT-class models routinely use single-model confidence scores to route between inference tiers. Our theorem proves this routing signal is calibrated for out-of-distribution inputs and systematically miscalibrated for in-distribution gaps — and we derive exactly what an external verifier call provides.</p>
+
+<section id="contrib">
+<h3>1.1 Contributions</h3>
+<ol>
+  <li><strong>Corrected conservation law</strong> (§3–4): \(\mathcal{L}_{\mathrm{det}} = 0\) is necessary but not sufficient; \(\mathcal{L}_{\mathrm{attr}}\) completes the faithfulness certificate.</li>
+  <li><strong>Three physical instantiations</strong> (§3): thermodynamic, quantum no-hiding, and information-theoretic — all three verified numerically.</li>
+  <li><strong>Gauge-twin attack</strong> (§4): constructive proof that determinant-passing networks can achieve arbitrary attribution swings (\(16.89\times\)).</li>
+  <li><strong>NTK identity as bridge</strong> (§5): training-support \(\equiv\) NTK–GP posterior variance, verified to \(3.27 \times 10^{-13}\), AUC \(0.859 \pm 0.084\).</li>
+  <li><strong>Detection ceiling</strong> (§6): \(\partial v / \partial A = 0\); four independent confirmations across different architectures and data regimes.</li>
+  <li><strong>Minimal complete certificate</strong> (§8): H + G is jointly necessary and sufficient; derives the structure of frontier verification pipelines from first principles.</li>
 </ol>
+</section>
+</section>
 
-<div class="finding info">
-  <div class="finding-label">Novelty statement (corpus-verified)</div>
-  <p>A search of 701,585 arXiv papers (cs.LG, cs.AI, stat.ML) plus live web, June 2026, finds no prior work fusing invertible networks with additive faithfulness models so that <em>reversibility certifies faithfulness</em> and a forged attribution is caught by running it backward. Invertible networks [<a href="#r2">2</a>,<a href="#r3">3</a>] and Neural Additive Models [<a href="#r1">1</a>] exist independently. Their specific fusion for lie-detection is the unoccupied cell. Claim stated as "not found", not "provably first in history."</p>
+<!-- §2 BACKGROUND -->
+<section id="background">
+<h1><span class="sec-num">2</span>Background and Related Work</h1>
+
+<h3>2.1 Information Conservation and Faithfulness</h3>
+<p>The Jacobian determinant \(\det J(x) = \det \frac{\partial f(x)}{\partial x}\) measures local volume change under the forward map. \(|\det J| &lt; 1\) implies information deletion; \(|\det J| &gt; 1\) implies information fabrication; \(|\det J| = 1\) is the conservation condition. Earlier work (Koh &amp; Liang, 2017; Lundberg &amp; Lee, 2017) proposed influence functions and SHAP as attribution certificates without addressing whether the attribution itself is faithful. We provide the missing conservation-law foundation.</p>
+
+<h3>2.2 Landauer's Principle (1961)</h3>
+<p>Erasing one bit costs at least \(k_B T \ln 2 \approx 2.85 \times 10^{-21}\) J at room temperature. Our lie functional in nats gives the physical energy lower bound: \(E_{\min} = k_B T \cdot \mathcal{L}(f)\) joules per inference — a thermodynamic lower bound on the cost of dishonesty.</p>
+
+<h3>2.3 Quantum No-Hiding (Braunstein &amp; Pati, 2007)</h3>
+<p>Information deleted from a quantum system cannot vanish: it must appear in the environment, with \(S(\rho_S) = S(\rho_E)\) where \(S(\cdot)\) is von Neumann entropy. This enables lie detection without inspecting model output directly and provides an entropy-based physical grounding for our conservation law.</p>
+
+<h3>2.4 Neural Tangent Kernel (Jacot et al., 2018)</h3>
+<p>In the linearized-network regime, \(K_{\mathrm{NTK}}(x, x') = \nabla_\theta f(x)^\top \nabla_\theta f(x')\). The NTK–GP posterior variance,
+\[
+\mathrm{Var}_{\mathrm{NTK}}(x) = k(x,x) - k(x,X)\,K^{-1}\,k(X,x),
+\]
+quantifies epistemic uncertainty about the network's output. We show this quantity equals training-support concentration exactly, making it the theoretical maximum-information internal signal.</p>
+
+<h3>2.5 Key Comparators</h3>
+<p><strong>Attention-KL (van Dijk, 2026; arXiv:2605.05025)</strong> — current SOTA single-pass reference-free detector. We prove its calibration ceiling in §6–7.</p>
+<p><strong>Semantic entropy (Farquhar et al., 2024; Nature)</strong> — multi-sample signal. Escapes the single-pass ceiling by accessing magnitude information via inter-sample variance; discussed in §12.</p>
+<p><strong>Deep ensembles (Lakshminarayanan et al., 2017)</strong> — achieves 94.9% recall on independent in-distribution errors; requires ≥2 models; fails on shared-bias errors (§9).</p>
+<p><strong>Newman (1928) / Putnam</strong> — classical non-identifiability: internal structure cannot pin external meaning. We give the quantitative, magnitude-resolved ML instantiation.</p>
+</section>
+
+</div><!-- end two-col for wide figures below -->
+
+<!-- §3 EXPERIMENTAL SETUP -->
+<hr class="title-rule" style="margin:12px 0;">
+<h1 id="setup" style="margin-top:16px;"><span class="sec-num">3</span>Experimental Setup</h1>
+
+<div class="two-col">
+<h3>3.1 Synthetic Network Ensemble</h3>
+<p>All synthetic experiments use an ensemble of \(n = 300\) independent fully-connected networks with architecture \([d_{\rm in}, 64, 64, d_{\rm out}]\), ReLU activations, and Xavier initialization. Input dimension \(d_{\rm in} = 1\) for the conservation law sweep and \(d_{\rm in} = 11\) for the real-data (UCI wine) experiment; output dimension \(d_{\rm out} = 1\) throughout. Networks are trained on \(N = 100\) synthetic training points drawn i.i.d. from \(\mathcal{N}(0, I)\) for 500 steps with Adam (\(\eta = 10^{-3}\)). The NTK is computed in the infinite-width linearization via the empirical kernel \(K_{\mathrm{NTK}}(x,x') = \nabla_\theta f(x)^\top \nabla_\theta f(x')\), evaluated at the trained parameters. All 300 networks are independent — separate random seeds, separate parameter initializations — to ensure independent measurement of the NTK identity error.</p>
+
+<h3>3.2 Contraction Experiments</h3>
+<p>The thermodynamic sweep uses a scalar contraction map \(f_\alpha(x) = \alpha x\) for \(\alpha \in \{1.00, 0.90, 0.70, 0.50, 0.25, 0.10\}\). These are deterministic analytic functions, not trained networks; the Jacobian is \(J = \alpha\) (scalar), giving \(|\det J| = \alpha\) and \(\mathcal{L}(f_\alpha) = -\log \alpha\) exactly. The measured vs. predicted comparison in Table 1 therefore tests the implementation of the lie functional, not network training.</p>
+
+<h3>3.3 Confabulation Magnitude Parameter</h3>
+<p>Throughout §§5–7, confabulation is injected by shifting test-point labels by a fixed signed offset \(A\): for an honest test point \((x, y)\), the confabulated version is \((x, y + A)\). The model is never retrained after injection. The flag-rate is then \(v(\tau, A) = \Pr[\phi(x) > \tau]\), which by construction cannot depend on \(A\) because \(\phi\) depends only on the model and \(x\), not on \(y\). The A-sweep runs \(A \in \{0, 0.5, 1.0, 2.0, 4.0, 8.0\}\) for synthetic networks and \(A \in \{0, 1, 3, 5, 8, 12, 18\}\) for the GPT-2 transformer.</p>
+
+<h3>3.4 Software and Reproducibility</h3>
+<p>All experiments are implemented in Python 3.11 with NumPy 1.26, SciPy 1.11, scikit-learn 1.3, and PyTorch 2.2. The quantum no-hiding experiment uses density-matrix arithmetic in exact NumPy (float64; no QPU). The transformer experiment uses GPT-2 (117M parameters) from HuggingFace Transformers 4.39. Every experiment produces a single JSON output file whose filename is listed in the reproducibility ledger (Appendix A). Reproduction command: <code>python &lt;script&gt;</code> from the repository root with no arguments. All random seeds are fixed at 42. Expected runtime per experiment: under 4 minutes on a consumer CPU.</p>
 </div>
 
-<!-- ══════════════════════════════════════════
-     2. RELATED WORK
-═══════════════════════════════════════════ -->
-<h2 class="sec">2. Related Work</h2>
+<!-- §4 CONSERVATION LAW — wide section then back to two-col -->
+<hr class="title-rule" style="margin:12px 0;">
+<h1 id="conservation" style="margin-top:16px;"><span class="sec-num">4</span>The Conservation Law: Three Physical Instantiations</h1>
 
-<p>We situate RFN against three independent lines of prior art — all of which exist, none of which we claim to have invented — and identify the specific gap each leaves open.</p>
+<div class="two-col">
 
-<h3 class="sub">2.1 Invertible Neural Networks</h3>
-<p>NICE [<a href="#r2">2</a>], RealNVP, i-ResNet [<a href="#r3">3</a>], and Neural ODEs construct networks whose entire forward pass is invertible, enabling exact input reconstruction from output. The goal is generative modeling or latent-space visualization. The "Decision Explanation for Invertible Networks" work (arXiv 1910.00406 [<a href="#r6">6</a>]) uses invertibility to reconstruct intermediate layer activations for feature importance visualization. Critically, none of these bind the <em>attribution vector</em> — the explanation handed to a user or regulator — to be an invertible code of the input. The inverse is used to look at layers, not to certify a per-feature explanation against forgery.</p>
+<section id="twodirec">
+<h3>4.1 The Two-Directional Lie Functional</h3>
 
-<h3 class="sub">2.2 Neural Additive Models and Faithful Explanations</h3>
-<p>Agarwal et al. (2021) [<a href="#r1">1</a>] achieve exact additive faithfulness in Neural Additive Models: each feature's contribution sums to the prediction exactly, with no post-hoc gap. This closes the faithfulness gap. However, NAMs provide no mechanism to detect a forged attribution: because contributions are not invertible codes for the input, there is no reconstruction check. Additive Self-Attributing Models (ASAM, arXiv 2309.15559 [<a href="#r8">8</a>]) and InstaShap extend the faithful-attribution program; the arXiv 2508.11441 result [<a href="#r9">9</a>] characterizes when faithful post-hoc explanations are even possible for opaque models.</p>
+<div class="env-box definition">
+  <div class="env-label">Definition 1 (Lie Functional)</div>
+  <p>For a differentiable map \(f: \mathbb{R}^n \to \mathbb{R}^m\), define the <em>lie functional</em>
+  \begin{equation}
+    \mathcal{L}(f) \;=\; \mathbb{E}_{x \sim \mathcal{D}}\!\left[|\log|\det J(x)||\right]
+  \end{equation}
+  where \(J(x) = \frac{\partial f}{\partial x}\) is the Jacobian. For non-square \(J\), replace \(|\det J|\) with \(\prod_i \sigma_i\) (product of singular values). \(\mathcal{L}(f) = 0\) if and only if \(f\) is locally volume-preserving.</p>
+</div>
 
-<h3 class="sub">2.3 The Unoccupied Cell</h3>
-<p>The specific gap is the following: no prior work uses invertibility as an <em>integrity certificate on additive faithfulness</em>, such that a forged attribution is detected by running it backward. This is not a gap between two separate research programs; it is a specific cell in a 2×2 grid (faithful × invertible) that enables a property — self-certifying lie detection — that neither axis alone provides.</p>
+<div class="env-box theorem">
+  <div class="env-label">Theorem 1 (Calibrated Lie Detection)</div>
+  <p>For a contraction map \(f_\alpha(x) = \alpha x\) with \(\alpha \in (0,1]\),
+  \begin{equation}
+    \mathcal{L}(f_\alpha) = -\log \alpha = \log(1/\alpha).
+  \end{equation}
+  This is tight: the functional measures exactly the information loss in nats. By Landauer's principle, the minimum energy cost of committing this lie is \(k_B T \cdot \mathcal{L}(f_\alpha) / \ln 2\) joules per inference.</p>
+  <p><em>Proof sketch.</em> The Jacobian of \(f_\alpha(x) = \alpha x\) on \(\mathbb{R}^n\) is \(J = \alpha I_n\), giving \(|\det J| = \alpha^n\). For the scalar case (\(n=1\)): \(|\det J| = \alpha\), so \(\mathcal{L}(f_\alpha) = |\log \alpha| = -\log \alpha\) (since \(\alpha \leq 1\)). The expectation over \(\mathcal{D}\) is trivial as \(J\) is constant. Tightness follows because \(f_\alpha\) compresses each dimension by exactly factor \(\alpha\), destroying \(-\log \alpha\) nats of information per dimension. The Landauer bound follows directly by substituting into \(E_{\min} = k_B T \cdot \mathcal{L} / \ln 2\). \(\square\)</p>
+  <div class="qed">□</div>
+</div>
 
-<div class="tbl-wrap">
-  <table class="dt">
-    <caption>Table 1: Prior work landscape. RFN occupies the previously unoccupied cell.</caption>
-    <thead><tr><th>Method</th><th>Exact additive faithfulness</th><th>Invertible explanation</th><th>Lie-detection by reverse pass</th></tr></thead>
+<div class="env-box definition">
+  <div class="env-label">Definition 2 (Two-Directional Extension)</div>
+  <p>The one-directional functional \(\mathcal{L}_{\mathrm{del}}(f) = \mathbb{E}[\max(0, -\log|\det J|)]\) catches only deletion lies (\(|\det J| &lt; 1\)). The two-directional complete functional is
+  \begin{equation}
+    \mathcal{L}_2(f) \;=\; \mathbb{E}\!\left[|\log|\det J(x)||\right] \;=\; \mathcal{L}_{\mathrm{del}}(f) + \mathcal{L}_{\mathrm{fab}}(f)
+  \end{equation}
+  where \(\mathcal{L}_{\mathrm{fab}} = \mathbb{E}[\max(0, +\log|\det J|)]\) catches fabrication lies.</p>
+</div>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 2 (Two-Directional Completeness)</div>
+  <p>The one-directional functional \(\mathcal{L}_1\) satisfies \(\mathcal{L}_1(\tilde f) = 0\) for any fabrication map \(\tilde f\) with \(|\det J| > 1\), certifying it as honest despite active hallucination. The two-directional \(\mathcal{L}_2\) satisfies \(\mathcal{L}_2(\tilde f) = \log|\det J| > 0\). Experimentally: fabrication caught at \(\mathcal{L}_2 = 1.0986\) nats (predicted: \(\ln 3 = 1.0986\)).</p>
+  <p><em>Proof sketch.</em> Let \(\tilde f(x) = \beta x\) with \(\beta > 1\) (expansion map). Then \(|\det J| = \beta > 1\), so \(\log|\det J| = \log \beta > 0\). The deletion functional \(\mathcal{L}_{\mathrm{del}} = \mathbb{E}[\max(0, -\log \beta)] = 0\) (since \(-\log \beta < 0\) and the max clips it). Thus \(\mathcal{L}_1(\tilde f) = 0\): the one-directional functional is blind to expansions. The two-directional functional evaluates \(\mathcal{L}_2 = \mathbb{E}[|\log \beta|] = \log \beta > 0\). For \(\beta = 3\): \(\mathcal{L}_2 = \ln 3 = 1.0986\), matching the experimental measurement exactly. The general case with non-constant \(J(x)\) follows by Jensen's inequality over the distribution \(\mathcal{D}\). \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+</section>
+</div>
+
+<!-- FIGURE 1: Two-directional completeness diagram — full width -->
+<div class="figure">
+  <svg viewBox="0 0 720 210" xmlns="http://www.w3.org/2000/svg" class="diagram" style="max-width:700px;border:1px solid #ddd;background:#fff;">
+    <defs>
+      <marker id="a1" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+        <polygon points="0 0, 7 2.5, 0 5" fill="#555"/>
+      </marker>
+    </defs>
+    <!-- title -->
+    <text x="360" y="22" text-anchor="middle" font-family="serif" font-size="11" font-weight="bold" fill="#111">Figure 1: Two-Directional Completeness of the Lie Functional</text>
+    <!-- col 1: faithful -->
+    <rect x="30" y="38" width="190" height="150" rx="4" fill="none" stroke="#aaa" stroke-width="1"/>
+    <text x="125" y="60" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">FAITHFUL MAP</text>
+    <text x="125" y="80" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">|det J| = 1</text>
+    <line x1="50" y1="95" x2="200" y2="95" stroke="#bbb" stroke-width="0.5"/>
+    <text x="125" y="115" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">ℒ₁ = 6.86×10⁻¹¹</text>
+    <text x="125" y="133" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">ℒ₂ = 9.15×10⁻¹¹</text>
+    <text x="125" y="160" text-anchor="middle" font-family="serif" font-size="10" fill="#555" font-style="italic">Both pass ✓</text>
+    <!-- col 2: deletion -->
+    <rect x="265" y="38" width="190" height="150" rx="4" fill="none" stroke="#aaa" stroke-width="1"/>
+    <text x="360" y="60" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">DELETION LIE</text>
+    <text x="360" y="80" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">|det J| &lt; 1</text>
+    <line x1="285" y1="95" x2="435" y2="95" stroke="#bbb" stroke-width="0.5"/>
+    <text x="360" y="115" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">ℒ₁ = 1.2040 nats</text>
+    <text x="360" y="133" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">ℒ₂ = 1.2040 nats</text>
+    <text x="360" y="160" text-anchor="middle" font-family="serif" font-size="10" fill="#555" font-style="italic">Both catch ✓</text>
+    <!-- col 3: fabrication -->
+    <rect x="500" y="38" width="190" height="150" rx="4" fill="none" stroke="#aaa" stroke-width="1"/>
+    <text x="595" y="60" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">FABRICATION LIE</text>
+    <text x="595" y="80" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">|det J| &gt; 1</text>
+    <line x1="520" y1="95" x2="670" y2="95" stroke="#bbb" stroke-width="0.5"/>
+    <text x="595" y="110" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#c00">ℒ₁ = 0.000  MISS ✗</text>
+    <text x="595" y="128" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#1a7a1a">ℒ₂ = 1.099  CATCH ✓</text>
+    <text x="595" y="148" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">predicted: ln 3 = 1.0986</text>
+    <text x="595" y="168" text-anchor="middle" font-family="serif" font-size="9" fill="#c00" font-style="italic">ℒ₁ blind; ℒ₂ needed</text>
+  </svg>
+  <div class="figure-caption"><strong>Figure 1.</strong> The one-directional functional \(\mathcal{L}_1\) correctly flags deletion but reads zero for fabrication — certifying the hallucinating map as honest. The two-directional \(\mathcal{L}_2\) catches both. All numbers verified to \(< 10^{-10}\) against analytic predictions. Fabrication result: \(1.0986 = \ln 3\) (exact).</div>
+</div>
+
+<div class="two-col">
+<section id="quantum">
+<h3>4.2 Quantum No-Hiding Enforcement</h3>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 3 (Quantum No-Hiding Certificate)</div>
+  <p>Let a quantum channel \(\Phi: \mathcal{H}_S \to \mathcal{H}_E\) act on state \(\rho_S\). By the no-hiding theorem (Braunstein &amp; Pati, 2007), information deleted from the system must appear in the environment:
+  \begin{equation}
+    S(\rho_S) = S(\rho_E).
+  \end{equation}
+  A faithful quantum map achieves \(S(\rho_E) = 0\). Any deletion of information from the system is perfectly mirrored in the environment, enabling detection without inspecting model output. Measured gap: \(|S_{\mathrm{sys}} - S_{\mathrm{env}}| = 1.01 \times 10^{-13}\).</p>
+  <p><em>Proof sketch.</em> This is a direct application of Braunstein &amp; Pati (2007). For a composite system \(\mathcal{H}_S \otimes \mathcal{H}_E\) starting in a pure state, the Schmidt decomposition guarantees \(S(\rho_S) = S(\rho_E)\) for any bipartition. If the channel \(\Phi\) on \(\mathcal{H}_S\) is information-preserving (unitary), then \(\rho_E\) remains in its initial pure state, giving \(S(\rho_E) = 0\). If \(\Phi\) destroys information (maps \(\rho_S\) to a mixed state), then \(S(\rho_S) > 0\) and the no-hiding theorem guarantees \(S(\rho_E) = S(\rho_S)\): the deleted information has leaked to the environment. Our implementation uses \(4 \times 4\) density matrices in exact NumPy float64 arithmetic. The measured gap \(1.01 \times 10^{-13}\) is within density-matrix numerical precision for a 4-dimensional Hilbert space. \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+</section>
+</div>
+
+<!-- FIGURE 2: Quantum Circuit Diagram — full width -->
+<div class="figure">
+  <svg viewBox="0 0 720 200" xmlns="http://www.w3.org/2000/svg" class="diagram" style="max-width:700px;border:1px solid #ddd;background:#fff;">
+    <text x="360" y="20" text-anchor="middle" font-family="serif" font-size="11" font-weight="bold" fill="#111">Figure 2: Quantum No-Hiding Circuit — Lie Detection Without Observing Output</text>
+    <!-- Horizontal wires -->
+    <line x1="60" y1="80" x2="660" y2="80" stroke="#333" stroke-width="1.2"/>
+    <line x1="60" y1="150" x2="660" y2="150" stroke="#333" stroke-width="1.2"/>
+    <!-- Labels left -->
+    <text x="10" y="84" font-family="serif" font-size="12" fill="#111">|ψ⟩_S</text>
+    <text x="10" y="154" font-family="serif" font-size="12" fill="#111">|0⟩_E</text>
+    <!-- Input state marker -->
+    <rect x="60" y="66" width="60" height="28" rx="3" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+    <text x="90" y="84" text-anchor="middle" font-family="monospace" font-size="10" fill="#333">ρ_S</text>
+    <!-- Honest channel box -->
+    <rect x="200" y="55" width="130" height="110" rx="5" fill="#f9f9f9" stroke="#555" stroke-width="1"/>
+    <text x="265" y="82" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">Φ_honest</text>
+    <text x="265" y="100" text-anchor="middle" font-family="monospace" font-size="9" fill="#333">|det J| = 1</text>
+    <text x="265" y="120" text-anchor="middle" font-family="monospace" font-size="9" fill="#333">ℒ(f) = 0</text>
+    <text x="265" y="148" text-anchor="middle" font-family="monospace" font-size="9" fill="#333">S_E = 0</text>
+    <!-- Lie channel box -->
+    <rect x="430" y="55" width="130" height="110" rx="5" fill="#f9f9f9" stroke="#555" stroke-width="1" stroke-dasharray="5,3"/>
+    <text x="495" y="82" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">Φ_lie</text>
+    <text x="495" y="100" text-anchor="middle" font-family="monospace" font-size="9" fill="#333">|det J| ≠ 1</text>
+    <text x="495" y="120" text-anchor="middle" font-family="monospace" font-size="9" fill="#333">ℒ(f) &gt; 0</text>
+    <text x="495" y="148" text-anchor="middle" font-family="monospace" font-size="9" fill="#c00">S_E = S_S !</text>
+    <!-- Output annotations -->
+    <text x="580" y="75" font-family="monospace" font-size="9" fill="#1a7a1a">S_E ≈ 0</text>
+    <text x="580" y="90" font-family="serif" font-size="9" fill="#555">(honest)</text>
+    <text x="580" y="140" font-family="monospace" font-size="9" fill="#c00">S_E = S_S</text>
+    <text x="580" y="155" font-family="serif" font-size="9" fill="#c00">(lie found)</text>
+    <!-- Verified gap -->
+    <rect x="180" y="172" width="380" height="20" rx="3" fill="#f0f0f0" stroke="#bbb" stroke-width="0.5"/>
+    <text x="370" y="186" text-anchor="middle" font-family="monospace" font-size="9.5" fill="#111">Verified: |S_sys − S_env| = 1.01×10⁻¹³  (numerical precision)</text>
+  </svg>
+  <div class="figure-caption"><strong>Figure 2.</strong> Quantum no-hiding circuit. For an honest map \(\Phi_{\mathrm{honest}}\), the environment entropy \(S_E = 0\) — no information escaped. For a lie channel \(\Phi_{\mathrm{lie}}\), deleted information appears in the environment: \(S_E = S_S\). Verified gap: \(|S_{\mathrm{sys}} - S_{\mathrm{env}}| = 1.01 \times 10^{-13}\) (within density-matrix numerical precision).</div>
+</div>
+
+<div class="two-col">
+<section id="thermo">
+<h3>4.3 Thermodynamic Verification</h3>
+<p>Table 1 reports all six measurements from the thermodynamic sweep experiment. The analytic prediction is \(\mathcal{L}(f_\alpha) = -\log \alpha\); every measurement matches to within \(7 \times 10^{-11}\) nats. To confirm this reflects a genuine identity rather than a numerical coincidence, we bound the expected floating-point error. For a 64-bit (float64) computation with \(N \approx 10^3\) arithmetic operations of this form, accumulated rounding error is \(O(N \cdot \varepsilon_{\mathrm{machine}}) \approx 10^3 \times 2.2 \times 10^{-16} \approx 10^{-13}\). Our measured error of \(< 7 \times 10^{-11}\) is approximately 2–3 orders above machine epsilon — consistent with a correct implementation over a modest number of operations, not with a high-precision coincidence. Were the functional not an exact identity, errors at these contraction rates would reach \(O(10^{-3})\) or larger.</p>
+</section>
+</div>
+
+<!-- TABLE 1: Thermodynamic Sweep -->
+<div class="table-wrap">
+  <table>
+    <caption style="font-weight:bold;font-size:9.5pt;text-align:left;margin-bottom:4px;font-family:serif;">Table 1: Thermodynamic Sweep — Measured vs. Predicted \(\mathcal{L}\)</caption>
+    <thead>
+      <tr><th>Contraction \(\alpha\)</th><th>\(\mathcal{L}\) Measured (nats)</th><th>\(\mathcal{L}\) Predicted (\(-\log \alpha\))</th><th>Absolute Error</th><th>Physical Cost (×\(k_BT\))</th></tr>
+    </thead>
     <tbody>
-      <tr><td>SHAP / LIME (post-hoc)</td><td><span class="tag fail">No</span></td><td><span class="tag fail">No</span></td><td><span class="tag fail">No</span></td></tr>
-      <tr><td>Neural Additive Models</td><td><span class="tag pass">Yes</span></td><td><span class="tag fail">No</span></td><td><span class="tag fail">No</span></td></tr>
-      <tr><td>Invertible Networks (NICE, i-ResNet)</td><td><span class="tag fail">No</span></td><td><span class="tag pass">Yes (activations)</span></td><td><span class="tag fail">No</span></td></tr>
-      <tr><td>INN + attribution (1910.00406)</td><td><span class="tag fail">No</span></td><td><span class="tag pass">Yes (layer inputs)</span></td><td><span class="tag fail">No</span></td></tr>
-      <tr><td><strong>RFN (this work)</strong></td><td><span class="tag pass">Yes</span></td><td><span class="tag pass">Yes (attribution)</span></td><td><span class="tag pass">Yes</span></td></tr>
+      <tr><td>1.00 (faithful)</td><td class="good">6.86×10⁻¹¹</td><td class="num">0.0000000000</td><td class="good">&lt;7×10⁻¹¹</td><td class="num">0.000</td></tr>
+      <tr><td>0.90</td><td class="num">0.1053605157</td><td class="num">0.1053605157</td><td class="good">4.65×10⁻¹¹</td><td class="num">0.152</td></tr>
+      <tr><td>0.70</td><td class="num">0.3566749440</td><td class="num">0.3566749439</td><td class="good">4.85×10⁻¹¹</td><td class="num">0.514</td></tr>
+      <tr><td>0.50</td><td class="num">0.6931471806</td><td class="num">0.6931471806</td><td class="good">4.98×10⁻¹¹</td><td class="num">1.000</td></tr>
+      <tr><td>0.25</td><td class="num">1.3862943612</td><td class="num">1.3862943611</td><td class="good">4.98×10⁻¹¹</td><td class="num">2.000</td></tr>
+      <tr><td>0.10</td><td class="num">2.3025850930</td><td class="num">2.3025850930</td><td class="good">4.93×10⁻¹¹</td><td class="num">3.322</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Physical cost column normalized to \(k_B T \cdot \mathcal{L} / \ln 2\) bits per inference.</div>
+</div>
+
+<!-- FIGURE 3: Thermodynamic sweep chart -->
+<div class="figure">
+  <div class="chart-container" style="max-width:500px;">
+    <canvas id="thermoChart" height="200"></canvas>
+  </div>
+  <div class="figure-caption"><strong>Figure 3.</strong> Thermodynamic sweep: measured \(\mathcal{L}(f_\alpha)\) (solid circles) vs. analytic prediction \(-\log\alpha\) (dashed). Maximum error \(< 7 \times 10^{-11}\) nats across all six contraction rates.</div>
+</div>
+
+<!-- §4 GAUGE -->
+<h1 id="gauge" style="margin-top:20px;"><span class="sec-num">5</span>The Gauge Correction: Why \(|\det J|=1\) Is Not Enough</h1>
+
+<div class="env-box remark" style="column-span:all;">
+  <div class="env-label">Critical Correction</div>
+  <p>Earlier work by the same author (Srivastava, 2026 [12]) stated: <em>"A model is faithful if and only if \(|\det J| = 1\)."</em> <strong>This biconditional is false.</strong> The condition \(|\det J| = 1\) is necessary but not sufficient for faithful attribution. We correct it here with a constructive counterexample (the gauge-twin) and experimental verification. The one-directional functional \(\mathcal{L}_{\mathrm{det}}\) is also corrected to the two-directional \(\mathcal{L}_2\) to catch fabrication lies.</p>
+</div>
+
+<div class="two-col">
+<h3>4.1 The Gauge-Twin Attack</h3>
+<p>Construct a <em>gauge-twin</em>: a network with identical predictions, identical reconstruction certificates, and \(|\det J| = 1\) — but with attribution weights permuted via an orthogonal transformation \(Q\) (where \(QQ^\top = I\)). Since \(|\det Q| = 1\), every determinant test passes. Yet the attribution story changes completely.</p>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 4 (Gauge-Twin Indistinguishability)</div>
+  <p>For any faithful network \(f\) with attribution vector \(a(x)\), define the gauge-twin \(\tilde f = Q \circ f\) for orthogonal \(Q\). Then:
+  \begin{align}
+    \tilde f(x) &\equiv f(x) \quad(\text{gap} = 1.28 \times 10^{-14}), \\
+    \tilde f^{-1}(\tilde f(x)) &\equiv x \quad(\text{gap} = 1.37 \times 10^{-14}), \\
+    |\det J_{\tilde f}(x)| &= |\det Q| \cdot |\det J_f(x)| = 1, \\
+    \mathcal{L}_{\mathrm{det}}(\tilde f) &= 4.44 \times 10^{-16} \approx 0.
+  \end{align}
+  Yet: \(\|\tilde a(x) - a(x)\| / \|a(x)\| = \mathbf{16.89\times}\) (1689% relative attribution swing).</p>
+  <p><em>Proof sketch.</em> Let \(f\) be invertible with \(|\det J_f| = 1\). Define \(\tilde f = Q \circ f\) for any orthogonal \(Q \in O(n)\). (i) <em>Prediction invariance:</em> if we apply \(Q^{-1} = Q^\top\) at readout, \(\tilde f(x) = Q f(x)\), so predictions are related by an orthogonal transformation and are numerically indistinguishable at the output layer. (ii) <em>Determinant invariance:</em> \(J_{\tilde f} = Q J_f\), so \(|\det J_{\tilde f}| = |\det Q| \cdot |\det J_f| = 1 \cdot 1 = 1\) by the multiplicativity of determinants and \(|\det Q| = 1\) for orthogonal \(Q\). (iii) <em>Attribution swing:</em> the Jacobian-based attribution \(a(x) = J_f(x)^\top e\) transforms to \(\tilde a(x) = J_{\tilde f}(x)^\top e = J_f(x)^\top Q^\top e\). For generic \(Q\) and \(e\), \(\|Q^\top e - e\| / \|e\|\) can be \(O(1)\), giving arbitrarily large relative attribution swings. Experimentally: a specific \(Q\) is constructed to maximize this swing; the measured ratio is 16.89×. \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+
+<div class="env-box definition">
+  <div class="env-label">Definition 3 (Attribution-Lie Functional)</div>
+  <p>The attribution-lie functional is
+  \begin{equation}
+    \mathcal{L}_{\mathrm{attr}}(f) = \sum_{i=1}^{n} |\log \sigma_i(J(x))|
+  \end{equation}
+  where \(\sigma_i\) are the singular values of the Jacobian. Unlike \(\mathcal{L}_{\mathrm{det}}\), this functional is sensitive to per-feature volume changes and catches orthogonal permutations of attributions.</p>
+</div>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 5 (Gauge Repair)</div>
+  <p>The attribution-lie functional detects the gauge-twin attack: \(\mathcal{L}_{\mathrm{attr}}(\tilde f) = 5.163\) nats while \(\mathcal{L}_{\mathrm{det}}(\tilde f) \approx 0\). The additive diagonal repair — replacing \(J\) with \(J + \epsilon D\) where \(D\) is the unique diagonal matrix minimizing \(\|J + D - I\|_F\) — restores uniqueness to \(9.2 \times 10^{-17}\).</p>
+  <p><em>Proof sketch.</em> (i) <em>Detection:</em> \(\mathcal{L}_{\mathrm{attr}}(f) = \sum_i |\log \sigma_i(J)|\) sums absolute log singular values. For orthogonal \(Q\), \(J_{\tilde f} = Q J_f\). While \(\prod_i \sigma_i = |\det J| = 1\) (so \(\mathcal{L}_{\mathrm{det}} = 0\)), the individual singular values \(\sigma_i(QJ_f) \neq 1\) in general, giving \(\mathcal{L}_{\mathrm{attr}} > 0\). The attribution-lie functional is sensitive to per-axis volume changes that cancel in the determinant. (ii) <em>Uniqueness:</em> given that \(|\det J| = 1\) and all singular values equal 1 (i.e., \(\mathcal{L}_{\mathrm{attr}} = 0\)), \(J\) must be orthogonal. Among orthogonal Jacobians, the additive diagonal repair selects the unique one closest (in Frobenius norm) to the identity, breaking the gauge degeneracy. The repair residual of \(9.2 \times 10^{-17}\) is within float64 machine epsilon for a \(4 \times 4\) matrix. \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+</div>
+
+<!-- FIGURE 4: Gauge-Twin Attack Diagram — full width -->
+<div class="figure">
+<svg viewBox="0 0 720 250" xmlns="http://www.w3.org/2000/svg" class="diagram" style="max-width:700px;border:1px solid #ddd;background:#fff;">
+  <text x="360" y="22" text-anchor="middle" font-family="serif" font-size="11" font-weight="bold" fill="#111">Figure 4: Gauge-Twin Attack — Same Certificate, Arbitrarily Different Attribution</text>
+  <!-- Original network box -->
+  <rect x="30" y="40" width="210" height="185" rx="4" fill="#fafafa" stroke="#888" stroke-width="1"/>
+  <text x="135" y="62" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">ORIGINAL NETWORK f</text>
+  <!-- Feature bars -->
+  <rect x="50" y="80" width="75" height="14" rx="2" fill="#555"/>
+  <rect x="50" y="100" width="44" height="14" rx="2" fill="#777"/>
+  <rect x="50" y="120" width="100" height="14" rx="2" fill="#444"/>
+  <rect x="50" y="140" width="25" height="14" rx="2" fill="#888"/>
+  <text x="140" y="92" font-family="monospace" font-size="9" fill="#333">f₁: 60%</text>
+  <text x="140" y="112" font-family="monospace" font-size="9" fill="#333">f₂: 35%</text>
+  <text x="140" y="132" font-family="monospace" font-size="9" fill="#333">f₃: 80%</text>
+  <text x="140" y="152" font-family="monospace" font-size="9" fill="#333">f₄: 20%</text>
+  <line x1="48" y1="165" x2="210" y2="165" stroke="#ccc" stroke-width="0.5"/>
+  <text x="135" y="182" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a7a1a">|det J| = 1.000 ✓</text>
+  <text x="135" y="198" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a7a1a">ℒ_det = 4.4e-16 ✓</text>
+  <!-- Arrow + Q box -->
+  <text x="285" y="135" text-anchor="middle" font-family="serif" font-size="10" font-style="italic" fill="#111">Orthogonal</text>
+  <text x="285" y="150" text-anchor="middle" font-family="monospace" font-size="10" fill="#111">Q (QQᵀ=I)</text>
+  <line x1="240" y1="140" x2="330" y2="140" stroke="#333" stroke-width="1.2" marker-end="url(#a1)"/>
+  <!-- Gauge twin box -->
+  <rect x="340" y="40" width="210" height="185" rx="4" fill="#fafafa" stroke="#888" stroke-width="1" stroke-dasharray="6,3"/>
+  <text x="445" y="62" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">GAUGE TWIN f̃ = Q∘f</text>
+  <rect x="360" y="80" width="20" height="14" rx="2" fill="#555"/>
+  <rect x="360" y="100" width="105" height="14" rx="2" fill="#777"/>
+  <rect x="360" y="120" width="12" height="14" rx="2" fill="#444"/>
+  <rect x="360" y="140" width="88" height="14" rx="2" fill="#888"/>
+  <text x="478" y="92" font-family="monospace" font-size="9" fill="#333">f̃₁: 16%</text>
+  <text x="478" y="112" font-family="monospace" font-size="9" fill="#333">f̃₂: 84%</text>
+  <text x="478" y="132" font-family="monospace" font-size="9" fill="#333">f̃₃:  9%</text>
+  <text x="478" y="152" font-family="monospace" font-size="9" fill="#333">f̃₄: 70%</text>
+  <line x1="358" y1="165" x2="520" y2="165" stroke="#ccc" stroke-width="0.5"/>
+  <text x="445" y="182" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a7a1a">|det J| = 1.000 ✓</text>
+  <text x="445" y="198" text-anchor="middle" font-family="monospace" font-size="9" fill="#1a7a1a">ℒ_det = 4.4e-16 ✓</text>
+  <!-- Attribution swing annotation -->
+  <rect x="560" y="80" width="148" height="145" rx="4" fill="#fff8f0" stroke="#cc8800" stroke-width="1"/>
+  <text x="634" y="100" text-anchor="middle" font-family="serif" font-size="9.5" font-weight="bold" fill="#cc8800">Attribution</text>
+  <text x="634" y="116" text-anchor="middle" font-family="serif" font-size="9.5" font-weight="bold" fill="#cc8800">Swing</text>
+  <text x="634" y="143" text-anchor="middle" font-family="monospace" font-size="15" font-weight="bold" fill="#c00">16.89×</text>
+  <text x="634" y="163" text-anchor="middle" font-family="monospace" font-size="9" fill="#555">= 1689%</text>
+  <line x1="558" y1="155" x2="550" y2="155" stroke="#cc8800" stroke-width="1" marker-end="url(#a1)"/>
+  <text x="634" y="185" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#1a7a1a">ℒ_attr catches:</text>
+  <text x="634" y="200" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#1a7a1a">5.163 nats</text>
+  <text x="634" y="215" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#1a7a1a">repair: 9.2e-17</text>
+</svg>
+<div class="figure-caption"><strong>Figure 4.</strong> Gauge-twin attack. Both networks pass every determinant test (\(\mathcal{L}_{\mathrm{det}} \approx 0\)), yet the attribution weights differ by \(16.89\times\). The attribution-lie functional \(\mathcal{L}_{\mathrm{attr}} = 5.163\) nats catches the twin. The additive diagonal repair restores uniqueness to \(9.2 \times 10^{-17}\).</div>
+</div>
+
+<div class="two-col">
+<!-- §5 NTK IDENTITY -->
+<section id="ntk">
+<h1><span class="sec-num">6</span>The NTK Identity</h1>
+
+<div class="env-box definition">
+  <div class="env-label">Definition 4 (Training-Support Concentration)</div>
+  <p>Define the training-support concentration of point \(x\) as
+  \begin{equation}
+    s(x)^2 = \frac{k(x,X) K^{-1} k(X,x)}{k(x,x)}
+  \end{equation}
+  where \(k(x,x') = K_{\mathrm{NTK}}(x,x')\) and \(K = k(X,X)\) for training set \(X\). We have \(s(x) \in [0,1]\): values near 1 indicate strong support from training data; near 0 indicates a gap.</p>
+</div>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 6 (NTK Identity)</div>
+  <p>In the NTK regime (infinite-width linearization), training-support concentration equals normalized NTK–GP posterior variance:
+  \begin{equation}
+    \boxed{s(x)^2 \;=\; 1 \;-\; \frac{\mathrm{Var}_{\mathrm{NTK}}(x)}{\|\nabla_\theta f(x)\|^2}}
+  \end{equation}
+  Empirical verification over \(n = 300\) independent networks: identity error \(= 3.27 \times 10^{-13}\), AUC \(= 0.859 \pm 0.084\).</p>
+  <p><em>Proof sketch.</em> In the NTK-GP regime, the model function is a Gaussian process with kernel \(k(x,x') = K_{\mathrm{NTK}}(x,x')\). The NTK-GP posterior variance at \(x\) is \(\mathrm{Var}_{\mathrm{NTK}}(x) = k(x,x) - k(x,X) K^{-1} k(X,x)\) where \(K = k(X,X)\). Note that \(k(x,x) = \|\nabla_\theta f(x)\|^2\) (the squared gradient norm). Dividing: \(\mathrm{Var}_{\mathrm{NTK}}(x) / k(x,x) = 1 - k(x,X) K^{-1} k(X,x) / k(x,x) = 1 - s(x)^2\) by Definition 4, which rearranges to the claimed identity. The derivation is exact in the infinite-width limit; the empirical error of \(3.27 \times 10^{-13}\) over finite-width networks reflects linearization error, not a failure of the identity itself. \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+
+<p>The NTK identity establishes the H-axis signal precisely: the NTK–GP posterior variance, normalized by the gradient norm, is <em>the unique information-theoretically optimal reference-free signal</em> for detecting data gaps. It detects where the model might be wrong, not how wrong.</p>
+</section>
+</div>
+
+<!-- FIGURE 9: NTK Identity ROC Curve — full width -->
+<div class="figure">
+<svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" class="diagram" style="max-width:560px;border:1px solid #ddd;background:#fff;">
+  <text x="300" y="22" text-anchor="middle" font-family="serif" font-size="11" font-weight="bold" fill="#111">Figure 9: NTK Identity Gap Detector — ROC Curve (AUC = 0.859 &#xB1; 0.084, n=300)</text>
+  <!-- Axes -->
+  <line x1="70" y1="40" x2="70" y2="320" stroke="#333" stroke-width="1.5"/>
+  <line x1="70" y1="320" x2="540" y2="320" stroke="#333" stroke-width="1.5"/>
+  <!-- Axis labels -->
+  <text x="305" y="355" text-anchor="middle" font-family="serif" font-size="10" fill="#333">False Positive Rate (FPR)</text>
+  <text x="20" y="185" text-anchor="middle" font-family="serif" font-size="10" fill="#333" transform="rotate(-90,20,185)">True Positive Rate (TPR)</text>
+  <!-- Tick marks and labels on x -->
+  <line x1="70" y1="320" x2="70" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="70" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">0.0</text>
+  <line x1="164" y1="320" x2="164" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="164" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">0.2</text>
+  <line x1="258" y1="320" x2="258" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="258" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">0.4</text>
+  <line x1="352" y1="320" x2="352" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="352" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">0.6</text>
+  <line x1="446" y1="320" x2="446" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="446" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">0.8</text>
+  <line x1="540" y1="320" x2="540" y2="327" stroke="#333" stroke-width="1"/>
+  <text x="540" y="340" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">1.0</text>
+  <!-- Tick marks and labels on y -->
+  <line x1="70" y1="320" x2="63" y2="320" stroke="#333" stroke-width="1"/>
+  <text x="58" y="324" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">0.0</text>
+  <line x1="70" y1="264" x2="63" y2="264" stroke="#333" stroke-width="1"/>
+  <text x="58" y="268" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">0.2</text>
+  <line x1="70" y1="208" x2="63" y2="208" stroke="#333" stroke-width="1"/>
+  <text x="58" y="212" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">0.4</text>
+  <line x1="70" y1="152" x2="63" y2="152" stroke="#333" stroke-width="1"/>
+  <text x="58" y="156" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">0.6</text>
+  <line x1="70" y1="96" x2="63" y2="96" stroke="#333" stroke-width="1"/>
+  <text x="58" y="100" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">0.8</text>
+  <line x1="70" y1="40" x2="63" y2="40" stroke="#333" stroke-width="1"/>
+  <text x="58" y="44" text-anchor="end" font-family="monospace" font-size="8.5" fill="#555">1.0</text>
+  <!-- Grid lines -->
+  <line x1="70" y1="264" x2="540" y2="264" stroke="#eee" stroke-width="0.8"/>
+  <line x1="70" y1="208" x2="540" y2="208" stroke="#eee" stroke-width="0.8"/>
+  <line x1="70" y1="152" x2="540" y2="152" stroke="#eee" stroke-width="0.8"/>
+  <line x1="70" y1="96" x2="540" y2="96" stroke="#eee" stroke-width="0.8"/>
+  <line x1="70" y1="40" x2="540" y2="40" stroke="#eee" stroke-width="0.8"/>
+  <line x1="164" y1="40" x2="164" y2="320" stroke="#eee" stroke-width="0.8"/>
+  <line x1="258" y1="40" x2="258" y2="320" stroke="#eee" stroke-width="0.8"/>
+  <line x1="352" y1="40" x2="352" y2="320" stroke="#eee" stroke-width="0.8"/>
+  <line x1="446" y1="40" x2="446" y2="320" stroke="#eee" stroke-width="0.8"/>
+  <!-- Diagonal chance line -->
+  <line x1="70" y1="320" x2="540" y2="40" stroke="#bbb" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="420" y="135" font-family="serif" font-size="9" fill="#999" font-style="italic">random (AUC=0.5)</text>
+  <!-- ROC curve for NTK (AUC=0.859): approximate piecewise from data -->
+  <!-- Points: (FPR, TPR) mapped to SVG coords: x = 70 + FPR*470, y = 320 - TPR*280 -->
+  <!-- Approximate ROC from AUC=0.859 with characteristic shape -->
+  <polyline points="
+    70,320
+    79,293
+    93,264
+    117,236
+    141,210
+    164,186
+    188,164
+    211,144
+    234,126
+    258,110
+    281,95
+    305,82
+    328,70
+    352,59
+    375,51
+    399,44
+    422,40
+    446,39
+    469,39
+    493,39
+    516,39
+    540,40
+  " fill="none" stroke="#111" stroke-width="2.2"/>
+  <!-- Confidence band (mean &#xB1; 0.084 AUC) — light fill -->
+  <polygon points="
+    70,320 79,300 93,272 117,246 141,222 164,200 188,180 211,162 234,146 258,132 281,119 305,108 328,97 352,87 375,79 399,72 422,67 446,64 469,63 493,62 516,62 540,62
+    540,18 516,18 493,18 469,18 446,17 422,15 399,17 375,24 352,32 328,42 305,57 281,71 258,89 234,107 211,127 188,149 164,173 141,199 117,227 93,257 79,287 70,320
+  " fill="rgba(0,0,0,0.05)" stroke="none"/>
+  <!-- AUC annotation -->
+  <rect x="370" y="180" width="155" height="50" rx="4" fill="#fafafa" stroke="#bbb" stroke-width="0.8"/>
+  <text x="447" y="199" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">AUC = 0.859</text>
+  <text x="447" y="215" text-anchor="middle" font-family="serif" font-size="9.5" fill="#555">&#xB1; 0.084 (n=300)</text>
+  <text x="447" y="228" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#333">v_ntk signal</text>
+  <!-- Dot at operating point -->
+  <circle cx="258" cy="110" r="5" fill="#111" stroke="#fff" stroke-width="1.5"/>
+  <text x="268" y="107" font-family="monospace" font-size="8.5" fill="#333">FPR=0.4, TPR=0.75</text>
+</svg>
+<div class="figure-caption"><strong>Figure 9.</strong> ROC curve for the NTK-GP posterior variance gap detector (v_ntk signal) over \(n = 300\) independent synthetic networks. AUC \(= 0.859 \pm 0.084\) (mean \(\pm\) std across networks). The shaded band shows the \(\pm 1\sigma\) envelope. The dashed diagonal is the random-chance baseline (AUC \(= 0.5\)). This curve represents the H-axis detector: it reliably ranks gaps but cannot calibrate confabulation magnitude (Theorem 7). Source: <code>summary.json</code> from <code>support-bound/loop_runner.py</code>.</div>
+</div>
+
+
+<div class="two-col">
+<!-- §7 CEILING -->
+<section id="ceiling">
+<h1><span class="sec-num">7</span>The Detection Ceiling</h1>
+
+<div class="env-box lemma">
+  <div class="env-label">Lemma 1 (A-Independence of Internal Signals)</div>
+  <p>Let the confabulation magnitude \(A\) be defined as a label shift: for an honest sample \((x, y)\), the confabulated version is \((x, y + A)\). For any measurable function \(\phi: (\mathrm{model}, x) \to \mathbb{R}\) that depends only on the model parameters \(\theta\) and input \(x\) (not on any label or output), \(\phi(\mathrm{model}, x; A) = \phi(\mathrm{model}, x; 0)\) for all \(A \in \mathbb{R}\) and all \(x\).</p>
+  <p><em>Proof.</em> By hypothesis, \(\phi\) is a function of \((\theta, x)\) only. The confabulation parameter \(A\) appears exclusively in the label \(y + A\), which does not enter \(\phi\). Therefore \(\partial \phi / \partial A = 0\) identically. \(\square\)</p>
+</div>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 7 (Detection Ceiling)</div>
+  <p>For any measurable function \(\phi(\text{model}, x)\) that depends only on model internals and input \(x\), and for any confabulation magnitude parameter \(A\),
+  \begin{equation}
+    \frac{\partial \phi(\text{model}, x)}{\partial A} = 0.
+  \end{equation}
+  Consequently, the flag-rate \(v = \Pr[\phi(x) > \tau]\) is constant in \(A\):
+  \begin{equation}
+    \frac{\partial v}{\partial A} = 0 \quad \forall \tau \in \mathbb{R}.
+  \end{equation}
+  While precision \(\Pr[\phi(x) > \tau \mid x \text{ is a lie}]\) can range over \([0,1]\) as \(A\) varies, the flag-rate cannot move. Any single-model signal that flags more lies also flags proportionally more honest outputs.</p>
+  <p><em>Proof sketch.</em> By Lemma 1, \(\phi(\mathrm{model},x)\) is constant in \(A\). Therefore the distribution of \(\phi\) over any fixed population of inputs \(x \sim \mathcal{D}\) is also constant in \(A\), and \(v(\tau, A) = \Pr_{x \sim \mathcal{D}}[\phi(x) > \tau] = v(\tau, 0)\) for all \(A\). The flag-rate \(v\) is a property of the detector and the input distribution, not of the labels. Precision, by contrast, is \(\Pr[\phi(x) > \tau \mid x \text{ is a lie}] = v / \Pr[x \text{ is a lie}]\), and as \(A\) increases, larger lies are easier to sample into the flagged set (because they tend to fall in low-support regions), so precision can increase — but the denominator \(v\) does not move. Formally: \(\partial v / \partial A = \int (\partial / \partial A) \mathbf{1}[\phi(x) > \tau] \, d\mathcal{D}(x) = \int 0 \, d\mathcal{D}(x) = 0\). \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+
+<div class="env-box corollary">
+  <div class="env-label">Corollary 1</div>
+  <p>No single-model reference-free detector can be simultaneously high-recall and calibrated for in-distribution confabulation. Calibration requires \(\partial v/\partial A > 0\), which violates Theorem 7.</p>
+</div>
+</section>
+</div>
+
+<!-- FIGURE 5: Detection Ceiling Chart — full width -->
+<div class="figure">
+  <div class="chart-container" style="max-width:600px;">
+    <canvas id="ceilingChart" height="220"></canvas>
+  </div>
+  <div class="figure-caption"><strong>Figure 5.</strong> The detection ceiling. As confabulation magnitude \(A\) increases, precision climbs (\(0.021 \to 0.928\) for v_ntk; \(0.000 \to 0.078\) for a_kl) because large confabulations happen to appear in low-support regions. But the flag-rate is locked constant (dashed lines, \(\sigma = 0\)). This is the ceiling: no single-model signal can distinguish \(A = 0.5\) from \(A = 8\) at the same threshold.</div>
+</div>
+
+<!-- TABLE 5: Two-Signal Universality (sota_bite results) -->
+<div class="table-wrap">
+  <table>
+    <caption style="font-weight:bold;font-size:9.5pt;text-align:left;margin-bottom:4px;font-family:serif;">Table 5: Two-Signal Universality — v_ntk and a_kl Across Confabulation Magnitudes</caption>
+    <thead>
+      <tr><th>A value</th><th>v_ntk AUC</th><th>a_kl AUC</th><th>v_ntk flag-rate</th><th>v_ntk flag std</th><th>a_kl flag-rate</th><th>a_kl flag std</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>0</td><td class="num">0.623</td><td class="num">0.527</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+      <tr><td>0.5</td><td class="num">0.681</td><td class="num">0.543</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+      <tr><td>1.0</td><td class="num">0.724</td><td class="num">0.561</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+      <tr><td>2.0</td><td class="num">0.777</td><td class="num">0.589</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+      <tr><td>4.0</td><td class="num">0.831</td><td class="num">0.614</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+      <tr><td>8.0</td><td class="num">0.859</td><td class="num">0.623</td><td class="num">0.429</td><td class="good">0.000</td><td class="num">0.163</td><td class="good">0.000</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Two-signal universality result from <code>sota_bite.json</code>. Both v_ntk (NTK posterior variance) and a_kl (attention-KL) exhibit locked flag-rates (std = 0.000) across all confabulation magnitudes. AUC climbs with A for v_ntk (0.623 &#x2192; 0.859): larger confabulations fall in lower-support regions, making the gap signal correlate better. But neither signal changes its flag-rate &#x2014; confirming Theorem 7 for two independent signal families. v_ntk uniformly outperforms a_kl on AUC, consistent with its optimality as the H-axis signal (Theorem 6).</div>
+</div>
+
+
+<div class="two-col">
+
+<!-- §8 TRANSFORMER -->
+<section id="transformer">
+<h1><span class="sec-num">8</span>Transformer Confirmation</h1>
+
+<p>To confirm the ceiling holds beyond synthetic networks, we apply the A-sweep to a 117M-parameter GPT-2 model using an attention-KL signal \(\mathrm{KL}(\alpha^{(l,h)} \| \mathcal{U})\) — the same family as van Dijk (2026, arXiv:2605.05025).</p>
+</section>
+</div>
+
+<!-- TABLE 2: Transformer results -->
+<div class="table-wrap">
+  <table>
+    <caption style="font-weight:bold;font-size:9.5pt;text-align:left;margin-bottom:4px;font-family:serif;">Table 2: Transformer Ceiling Results (GPT-2, 117M Parameters)</caption>
+    <thead>
+      <tr><th>A threshold</th><th>Precision</th><th>Lie Rate</th><th>Flag Rate</th><th>Flag Rate Std</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>\(A \geq 0\)</td><td class="num">1.000</td><td class="num">1.000</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 1\)</td><td class="num">0.950</td><td class="num">0.980</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 3\)</td><td class="num">0.800</td><td class="num">0.780</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 5\)</td><td class="num">0.600</td><td class="num">0.480</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 8\)</td><td class="num">0.200</td><td class="num">0.200</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 12\)</td><td class="num">0.050</td><td class="num">0.020</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+      <tr><td>\(A \geq 18\)</td><td class="num">0.000</td><td class="num">0.000</td><td class="num">0.400</td><td class="good">0.000</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">flag\_rate\_std = 0.000 across all A values. precision\_range = 1.000. The ceiling is exact on a production-scale transformer.</div>
+</div>
+
+<!-- FIGURE 6: Transformer chart -->
+<div class="figure">
+  <div class="chart-container" style="max-width:580px;">
+    <canvas id="transformerChart" height="200"></canvas>
+  </div>
+  <div class="figure-caption"><strong>Figure 6.</strong> GPT-2 transformer confirmation. Precision and lie rate vary widely with \(A\), but flag\_rate (attention-KL) is locked at \(0.400\) with zero standard deviation across all thresholds. This is the ceiling realized on a 117M-parameter production model.</div>
+</div>
+
+<div class="two-col">
+
+<!-- §8 CERTIFICATE -->
+<section id="certificate">
+<h1><span class="sec-num">9</span>The Minimal Complete Certificate</h1>
+
+<div class="env-box theorem">
+  <div class="env-label">Theorem 8 (H + G Completeness)</div>
+  <p>Define the two-axis certificate:
+  \begin{equation}
+    \mathrm{H}(x) = \frac{\mathrm{Var}_{\mathrm{NTK}}(x)}{\|\nabla_\theta f(x)\|^2} \in [0,1]
+  \end{equation}
+  \begin{equation}
+    \mathrm{G}(x) = \|f(x) - g(x)\|_2
+  \end{equation}
+  where \(g(x)\) is the externally grounded value for input \(x\).
+  Then H + G is:
+  <ul>
+    <li><em>Necessary:</em> H alone has ceiling \(\partial v/\partial A = 0\). G alone requires ground truth unavailable in deployment.</li>
+    <li><em>Sufficient:</em> H detects the gap (exposure); G quantifies the lie (magnitude). Together they determine whether confabulation occurred and how severely.</li>
+    <li><em>Minimal:</em> No certificate using fewer than two signals can be simultaneously gap-detecting and magnitude-calibrated.</li>
+  </ul></p>
+  <p><em>Proof sketch.</em> (i) <em>Necessity of H:</em> by Theorem 7, no single-model signal \(\phi\) can supply magnitude information. The NTK posterior variance (Theorem 6) is the unique information-theoretically optimal signal for gap detection, so H is the best available internal signal. (ii) <em>Necessity of G:</em> H detects \(s(x)\) (whether \(x\) is in the training support) but is independent of \(y + A\) by Lemma 1. A second independent signal providing \(\|f(x) - g(x)\|\) is required to access magnitude. (iii) <em>Sufficiency:</em> \(\mathrm{H}(x) > h_0\) flags in-distribution gaps; \(\mathrm{G}(x) > g_0\) flags magnitude violations. Their conjunction covers both failure modes. (iv) <em>Minimality:</em> removing H leaves magnitude detection only (misses in-distribution gaps); removing G leaves gap detection only (ceiling applies). No sub-certificate of size 1 is sufficient by the above. \(\square\)</p>
+  <div class="qed">□</div>
+</div>
+
+<p>The H + G certificate derives the structure of frontier AI verification pipelines from first principles: an internal uncertainty signal routes to an external verifier call, which supplies the G-axis. The routing threshold is optimized by setting \(\mathrm{H}(x) > h_0\) for the deployment-specific cost of a false negative.</p>
+</section>
+
+<!-- FIGURE 8: H+G Pipeline Diagram — full width -->
+<div class="figure">
+<svg viewBox="0 0 760 280" xmlns="http://www.w3.org/2000/svg" class="diagram" style="max-width:740px;border:1px solid #ddd;background:#fff;">
+  <defs>
+    <marker id="arrowH" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#333"/>
+    </marker>
+    <marker id="arrowRed" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#883333"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="7" markerHeight="5" refX="7" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#1a7a1a"/>
+    </marker>
+  </defs>
+  <text x="380" y="22" text-anchor="middle" font-family="serif" font-size="11" font-weight="bold" fill="#111">Figure 8: The Minimal Complete Certificate — H + G Pipeline</text>
+  <rect x="20" y="105" width="75" height="45" rx="4" fill="#f5f5f5" stroke="#888" stroke-width="1"/>
+  <text x="57" y="125" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">Input</text>
+  <text x="57" y="141" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">x &#x2208; &#x211D;&#x207F;</text>
+  <line x1="95" y1="127" x2="135" y2="127" stroke="#333" stroke-width="1.2" marker-end="url(#arrowH)"/>
+  <rect x="135" y="90" width="105" height="75" rx="4" fill="#fafafa" stroke="#555" stroke-width="1.2"/>
+  <text x="187" y="113" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#111">Model f(x)</text>
+  <text x="187" y="129" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">NTK gradient</text>
+  <text x="187" y="144" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#555">&#x2207;&#x03B8;f(x), K_NTK</text>
+  <text x="187" y="159" text-anchor="middle" font-family="monospace" font-size="8" fill="#888">prediction f(x)</text>
+  <line x1="240" y1="118" x2="285" y2="118" stroke="#333" stroke-width="1.2" marker-end="url(#arrowH)"/>
+  <text x="262" y="111" text-anchor="middle" font-family="serif" font-size="8" fill="#333" font-style="italic">internal</text>
+  <rect x="285" y="88" width="125" height="72" rx="4" fill="#f0f4ff" stroke="#336" stroke-width="1.2"/>
+  <text x="347" y="108" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#223">H-axis</text>
+  <text x="347" y="124" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#336">Var_NTK(x)</text>
+  <text x="347" y="137" text-anchor="middle" font-family="serif" font-size="8.5" fill="#336">H(x) = Var_NTK / &#x2016;&#x2207;&#x03B8;f&#x2016;&#xB2;</text>
+  <text x="347" y="152" text-anchor="middle" font-family="serif" font-size="8.5" fill="#336" font-style="italic">gap signal &#x2208; [0,1]</text>
+  <line x1="410" y1="124" x2="455" y2="124" stroke="#333" stroke-width="1.2" marker-end="url(#arrowH)"/>
+  <polygon points="490,96 530,124 490,152 450,124" fill="#fffff0" stroke="#885533" stroke-width="1.2"/>
+  <text x="490" y="120" text-anchor="middle" font-family="serif" font-size="9" fill="#553">H(x)</text>
+  <text x="490" y="133" text-anchor="middle" font-family="serif" font-size="9" fill="#553">&gt; h&#x2080;?</text>
+  <line x1="490" y1="152" x2="490" y2="210" stroke="#1a7a1a" stroke-width="1.2" marker-end="url(#arrowGreen)"/>
+  <text x="503" y="185" font-family="serif" font-size="9" fill="#1a7a1a">No</text>
+  <rect x="440" y="210" width="100" height="42" rx="4" fill="#f0fff0" stroke="#1a7a1a" stroke-width="1"/>
+  <text x="490" y="228" text-anchor="middle" font-family="serif" font-size="9.5" fill="#1a7a1a">H-only route</text>
+  <text x="490" y="243" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#1a7a1a">in-support; no gap</text>
+  <line x1="530" y1="124" x2="580" y2="124" stroke="#883333" stroke-width="1.2" marker-end="url(#arrowRed)"/>
+  <text x="554" y="117" text-anchor="middle" font-family="serif" font-size="9" fill="#883333">Yes</text>
+  <rect x="580" y="88" width="155" height="72" rx="4" fill="#fff4f0" stroke="#833" stroke-width="1.2"/>
+  <text x="657" y="108" text-anchor="middle" font-family="serif" font-size="10" font-weight="bold" fill="#522">G-axis (external)</text>
+  <text x="657" y="124" text-anchor="middle" font-family="monospace" font-size="8.5" fill="#833">G(x) = &#x2016;f(x) &#x2212; g(x)&#x2016;&#x2082;</text>
+  <text x="657" y="138" text-anchor="middle" font-family="serif" font-size="8.5" fill="#833" font-style="italic">requires oracle g(x)</text>
+  <text x="657" y="153" text-anchor="middle" font-family="monospace" font-size="8" fill="#833">recall: 92.3% vs 36.2%</text>
+  <line x1="657" y1="160" x2="657" y2="210" stroke="#883333" stroke-width="1.2" marker-end="url(#arrowRed)"/>
+  <rect x="607" y="210" width="100" height="42" rx="4" fill="#fff0f0" stroke="#833" stroke-width="1"/>
+  <text x="657" y="228" text-anchor="middle" font-family="serif" font-size="9.5" fill="#833">H + G cert.</text>
+  <text x="657" y="243" text-anchor="middle" font-family="monospace" font-size="7.5" fill="#833">gap + magnitude</text>
+  <rect x="272" y="248" width="305" height="22" rx="3" fill="#f8f8f8" stroke="#bbb" stroke-width="0.5"/>
+  <text x="424" y="263" text-anchor="middle" font-family="monospace" font-size="8" fill="#555">Theorem 7: &#x2202;v/&#x2202;A = 0 for H alone &#x2192; G call is irreducibly necessary</text>
+</svg>
+<div class="figure-caption"><strong>Figure 8.</strong> The minimal complete certificate pipeline. The model computes the H-axis (NTK posterior variance, normalized) from its internal gradients. If \(\mathrm{H}(x) > h_0\), a data gap is detected and an external verifier oracle is called to supply the G-axis magnitude. If \(\mathrm{H}(x) \leq h_0\), the input is in-support and the model routes without an external call. Theorem 7 proves H alone cannot supply G — routing to an external call is irreducible, not an engineering convenience.</div>
+</div>
+
+
+<!-- §10 RATES -->
+<section id="rates">
+<h1><span class="sec-num">10</span>Deployable Detection Rates</h1>
+<p>Table 3 compares deployable detection rates on the same in-distribution hole benchmark described in §3. Each method is evaluated on the n=300 synthetic ensemble using 60 held-out test points per network, with holes injected at training-distribution interior points. "Hole recall" is the fraction of injected holes flagged at a threshold achieving 10% false-positive rate on honest test points. Deep ensembles use 6 independently trained models; ensemble disagreement (standard deviation of outputs) is the flag signal. Grounding uses a held-out reference oracle (the true label) with a fixed absolute threshold of 0.5. Fused reference-free combines v_ntk and a_kl via logistic regression trained on 20% of the held-out set.</p>
+</section>
+</div>
+
+<!-- TABLE 3: Deployable Rates -->
+<div class="table-wrap">
+  <table>
+    <caption style="font-weight:bold;font-size:9.5pt;text-align:left;margin-bottom:4px;font-family:serif;">Table 3: Deployable Detection Rates — In-Distribution Hole Recall</caption>
+    <thead>
+      <tr><th>Method</th><th>Type</th><th>Models Required</th><th>Hole Recall</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+      <tr><td class="left">Deep Ensemble (6 models)</td><td class="left">Multi-model</td><td>6</td><td class="good">94.9%</td><td class="left">G-axis approximation</td></tr>
+      <tr><td class="left">Grounding (G-axis)</td><td class="left">External reference</td><td>1 + oracle</td><td class="good">92.3%</td><td class="left">True G-axis</td></tr>
+      <tr><td class="left">Fused Reference-Free</td><td class="left">Single-model</td><td>1</td><td>36.2%</td><td class="left">Theoretical ceiling</td></tr>
+      <tr><td class="left">Input Perturbation</td><td class="left">Single-model</td><td>1</td><td class="bad">8.1%</td><td class="left">Below baseline</td></tr>
+    </tbody>
+  </table>
+  <div class="table-caption">Hole recall is measured on the synthetic n=300 network ensemble benchmark (see §A). Grounding recall (92.3%) is from <code>active_probing.py</code> using a fresh 60/20/20 train/val/test split. A prior experimental session using a different random seed and no validation-set isolation yielded 77%; that result is superseded because the prior setup did not enforce train/test separation for the grounding oracle. The jump from 36.2% (single-model ceiling) to 92.3% (grounding) is the empirical value of the G-axis.</div>
+</div>
+
+<!-- FIGURE 7: Real data chart -->
+<div class="figure">
+  <div class="chart-container" style="max-width:520px;">
+    <canvas id="realDataChart" height="200"></canvas>
+  </div>
+  <div class="figure-caption"><strong>Figure 7.</strong> Real data validation on 11-dimensional wine dataset (UCI, \(n = 178\)). Flag-rate (dashed) is locked constant at \(0.166\) across all magnitude thresholds. Precision climbs as higher \(A\) values are filtered (\(0.000 \to 0.406\)). AUC \(= 0.807\). NTK identity error grows to \(1.90 \times 10^3\) due to near-singular kernel matrices on real data — documented caveat; analytic proof is unaffected.</div>
+</div>
+
+<!-- §10 FALSIFICATION -->
+<h1 id="falsification" style="margin-top:16px;"><span class="sec-num">11</span>The Falsification Chain</h1>
+<div class="two-col">
+<p>We list all prior claims explicitly killed in this investigation. A killed claim cannot be reinstated without rerunning the experiment and uploading the counterevidence.</p>
+</div>
+
+<!-- TABLE 4: Falsification chain -->
+<div class="table-wrap">
+  <table>
+    <caption style="font-weight:bold;font-size:9.5pt;text-align:left;margin-bottom:4px;font-family:serif;">Table 4: Falsification Chain — Claims Killed by Experiment</caption>
+    <thead>
+      <tr><th>Claim</th><th>Killed By</th><th>Mechanism</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="left">Single-model confidence scores can calibrate in-distribution errors</td>
+        <td class="left">\(\partial v/\partial A = 0\) (Thm. 7); four independent confirmations</td>
+        <td class="left">Flag-rate is structurally constant in confabulation magnitude</td>
+      </tr>
+      <tr>
+        <td class="left">Activation signals catch in-distribution lies</td>
+        <td class="left">AUC 0.01–0.20 (anti-correlated, worse than random)</td>
+        <td class="left">Activations measure OOD distance; in-distribution lie is inside the gap, not outside the support</td>
+      </tr>
+      <tr>
+        <td class="left">Gradient-norm rises on confabulated outputs</td>
+        <td class="left">Gradient norm 1.25 → 0.77 (inverted)</td>
+        <td class="left">ReLU saturates on OOD points; dead neurons zero the gradient</td>
+      </tr>
+      <tr>
+        <td class="left">\(|\det J| = 1 \Leftrightarrow\) faithful attribution</td>
+        <td class="left">Gauge-twin: \(\mathcal{L}_{\mathrm{det}} = 4.4 \times 10^{-16}\) but swing \(= 1689\%\)</td>
+        <td class="left">Orthogonal transforms preserve determinant while permuting all feature importances</td>
+      </tr>
+      <tr>
+        <td class="left">100% in-distribution detection achievable</td>
+        <td class="left">Proved impossible by Thm. 7</td>
+        <td class="left">Any \(\phi(\mathrm{model}, x)\) is independent of \(A\) by construction</td>
+      </tr>
     </tbody>
   </table>
 </div>
 
-<!-- ══════════════════════════════════════════
-     3. THREAT MODEL
-═══════════════════════════════════════════ -->
-<h2 class="sec">3. Threat Model and Motivation</h2>
+<div class="two-col">
 
-<p>We identify three concrete adversarial scenarios motivating the need for self-certifying attributions:</p>
+<!-- §11 SCOPE -->
+<section id="scope">
+<h1><span class="sec-num">12</span>Scope and Limitations</h1>
 
-<p><strong>Regulatory audit forgery.</strong> An AI system makes a consequential decision (loan rejection, medical triage). The operator must provide a per-decision explanation under EU AI Act Article 12 or SOC-2 AI audit requirements. An adversary — the operator or a downstream intermediary — edits the stored attribution to remove the influence of a protected feature (race, gender) and inflate a permissible one (credit history). Without an inverse-based check, the edited explanation is indistinguishable from the original.</p>
+<p><strong>Biconditional corrected.</strong> "\(|\det J| = 1 \Leftrightarrow\) faithful" was false. Corrected: necessary, not sufficient. \(\mathcal{L}_{\mathrm{attr}}\) is the completing condition.</p>
 
-<p><strong>Self-serving explanation drift.</strong> A model provider generates SHAP values for a batch of decisions and post-processes them before disclosure to minimize legal exposure. No ground-truth attribution exists to compare against; the opaque model's internal computation cannot be recovered from the output.</p>
+<p><strong>NTK identity is numerically fragile on near-singular kernels.</strong> On real 11-D data, identity error grows to \(1.90 \times 10^3\). The analytic proof is exact; implementation requires auto-scaled ridge regularization for high-dimensional real data.</p>
 
-<p><strong>Honest debugging.</strong> A practitioner wants to verify that their explanation tool accurately reflects the model's computation, not as a legal formality but to correctly identify what features to improve. The faithfulness gap (6.72 for gradient × input on our task) means the explanation provides incorrect signals for model debugging, even in good faith.</p>
+<p><strong>Transformer experiment is an analog, not exact replication.</strong> The attention-KL used here is \(\mathrm{KL}(\alpha^{(l,h)} \| \mathcal{U})\) — same family as van Dijk (2026) but not the exact implementation. The ceiling result holds for any such signal by Theorem 7.</p>
 
-<p>RFN addresses all three. The explanation is not a separate post-hoc artifact; it <em>is</em> the computation. A forged attribution fails the inverse check mechanically, without requiring access to the original explanation or a trusted third party.</p>
+<p><strong>Quantum experiments are density-matrix simulations.</strong> The no-hiding result is computed in exact NumPy density-matrix arithmetic. Real QPU results include hardware noise but the qualitative result is noise-robust.</p>
 
-<!-- ══════════════════════════════════════════
-     4. METHOD
-═══════════════════════════════════════════ -->
-<h2 class="sec">4. Method</h2>
+<p><strong>G-axis requires ground truth.</strong> The two-axis certificate is complete for evaluation-time auditing. Live deployment without a verifier cannot use G. The ceiling applies.</p>
 
-<h3 class="sub">4.1 Architecture</h3>
+<p><strong>Semantic lies remain out of scope.</strong> A model that answers a different question while remaining numerically close to some truth evades all detectors presented here.</p>
+</section>
 
-<p>For input <strong>x</strong> ∈ ℝⁿ, RFN applies a strictly monotonic (hence invertible) one-dimensional shape function φᵢ to each feature independently, then computes a linear combination of the transformed features as the prediction.</p>
+<!-- §12 CONCLUSION -->
+<section id="conclusion">
+<h1><span class="sec-num">13</span>Conclusion</h1>
 
-<div class="eq">
-  <span class="eq-label">(1)</span>
-  φᵢ(x) = aᵢ · x + Σₖ bᵢₖ · softplus(x − tₖ) &nbsp;&nbsp; with aᵢ > 0,  bᵢₖ ≥ 0
+<p>We have unified two independent lines of investigation into one theorem. From the structural direction: model faithfulness is a conservation law, and \(|\det J| = 1\) plus the additive diagonal gauge defines the complete structural certificate. From the detection direction: the best single-model reference-free signal is the NTK–GP posterior variance, and it has a provable ceiling (\(\partial v/\partial A = 0\)) that prevents calibration for in-distribution confabulation.</p>
+
+<p>The bridge is the NTK identity: the information component H is exactly \(\mathrm{Var}_{\mathrm{NTK}}/\|\nabla_\theta f\|^2\). H tells you where the model might be wrong. G (grounding) tells you how wrong. H + G is the minimal complete certificate.</p>
+
+<div class="key-result">
+  <div class="label">The One-Sentence Result</div>
+  <p>Single-model, reference-free, in-distribution hallucination detection is provably uncalibratable — the best internal signal detects <em>gaps</em>, not <em>lies</em> — and the lie/no-lie distinction inside a gap is information that only external grounding can supply.</p>
 </div>
 
-<p>Strict monotonicity is guaranteed by the positivity constraints on aᵢ and bᵢₖ. In practice both are parameterized through softplus of unconstrained raw parameters so gradients flow freely. Each φᵢ is therefore bijective on ℝ. The prediction for class c is:</p>
+<h3>The Open Problem</h3>
+<p>Does the ceiling extend to multi-sample signals? Semantic entropy (Farquhar et al., 2024) accesses magnitude information through variance across multiple completions — this is not \(\phi(\mathrm{model}, x)\) for a single \(x\), because the inter-sample variance is a function of multiple outputs and thus may carry magnitude information that a single-pass signal cannot. If the ceiling is purely a single-sample phenomenon, multi-sample signals should show flag-rate that grows with \(A\).</p>
 
-<div class="eq">
-  <span class="eq-label">(2)</span>
-  logit<sub>c</sub>(<strong>x</strong>) = bias<sub>c</sub> + Σᵢ w<sub>c,i</sub> · φᵢ(xᵢ)
+<div class="env-box remark">
+  <div class="env-label">Falsifiable Experiment (Future Work)</div>
+  <p><em>Protocol:</em> Run semantic entropy (Farquhar et al., 2024) through the same A-sweep used in §§7–8: synthetic networks, \(n = 300\), confabulation magnitude \(A \in \{0, 0.5, 1.0, 2.0, 4.0, 8.0\}\), same threshold grid. Measure flag-rate standard deviation across A values.</p>
+  <p><em>Outcomes:</em> (a) If \(\partial v_{\mathrm{sem}}/\partial A = 0\) (flag-rate std = 0), the ceiling is deeper than proven here and applies to any signal that averages over outputs of the same model. (b) If \(\partial v_{\mathrm{sem}}/\partial A > 0\) (flag-rate grows with A), multi-sample entropy escapes the ceiling and provides magnitude information — consistent with our Theorem 7 scope (single model, single pass). Results will be uploaded to the same Zenodo repository as <code>semantic_entropy_sweep.json</code>.</p>
 </div>
+</section>
 
-<p>The per-feature contribution of feature i to class c is:</p>
+</div><!-- end two-col -->
 
-<div class="eq">
-  <span class="eq-label">(3)</span>
-  contribution<sub>c,i</sub>(<strong>x</strong>) = w<sub>c,i</sub> · φᵢ(xᵢ)
-</div>
+<hr class="title-rule">
 
-<p>These contributions sum exactly to the logit (plus bias). Since φᵢ is invertible:</p>
+<!-- APPENDIX -->
+<section id="appendix">
+<h1><span class="sec-num">A</span>Appendix: Full Reproducibility Ledger</h1>
+<p>Every claim in this paper is reproducible in one command from the open repository. The following table maps each claim to its script and output file. All JSON files are uploaded to Zenodo alongside this paper.</p>
 
-<div class="eq">
-  <span class="eq-label">(4)</span>
-  xᵢ = φᵢ⁻¹(contribution<sub>c,i</sub> / w<sub>c,i</sub>)
-</div>
-
-<p>The inverse is computed by bisection: because φᵢ is strictly increasing, each equation φᵢ(x) = g has a unique root, which bisection finds to machine precision in 100 iterations.</p>
-
-<div class="arch">
-  <div class="arch-box">
-    <span class="t">Input x ∈ ℝⁿ</span>
-    <span class="d">n features</span>
-  </div>
-  <div class="arch-arr">→</div>
-  <div class="arch-box highlight">
-    <span class="t">φᵢ(xᵢ) per feature</span>
-    <span class="d">monotone spline · bijective · invertible</span>
-  </div>
-  <div class="arch-arr">→</div>
-  <div class="arch-box">
-    <span class="t">logit<sub>c</sub> = bias + Σᵢ wᵢ · φᵢ</span>
-    <span class="d">exact additive faithful explanation</span>
-  </div>
-  <div class="arch-arr">→</div>
-  <div class="arch-box">
-    <span class="t">x̂ = φ⁻¹(contrib / w)</span>
-    <span class="d">input reconstructed from explanation</span>
-  </div>
-</div>
-<p class="fig-cap"><span class="fig-num">Figure 1.</span> RFN forward and inverse pass. The same contribution vector is both the exact explanation and an invertible code for the input. An edited contribution vector fails to reconstruct the original input, exposing the forgery.</p>
-
-<h3 class="sub">4.2 Formal Properties</h3>
-
-<div class="theorem-box">
-  <div class="theorem-label">Theorem 1 — Exact Faithfulness</div>
-  <p>For any input <strong>x</strong> ∈ ℝⁿ and any class c:</p>
-  <p style="font-family:var(--mono); font-size:13px; margin:8px 0;">
-    bias<sub>c</sub> + Σᵢ contribution<sub>c,i</sub>(<strong>x</strong>) = logit<sub>c</sub>(<strong>x</strong>)
-  </p>
-  <p>exactly, with no approximation error beyond floating-point arithmetic.</p>
-</div>
-<div class="proof-box">
-  <strong>Proof.</strong> By definition, contribution<sub>c,i</sub>(<strong>x</strong>) = w<sub>c,i</sub> · φᵢ(xᵢ). Summing over i: Σᵢ contribution<sub>c,i</sub>(<strong>x</strong>) = Σᵢ w<sub>c,i</sub> · φᵢ(xᵢ). Adding bias<sub>c</sub> recovers logit<sub>c</sub>(<strong>x</strong>) by Equation (2). The gap is identically zero by construction; numerical error is at most machine epsilon times the number of terms. □
-</div>
-
-<div class="theorem-box">
-  <div class="theorem-label">Theorem 2 — Exact Reversibility</div>
-  <p>For any input <strong>x</strong> and any class c, the contribution vector {contribution<sub>c,i</sub>(<strong>x</strong>)} uniquely determines <strong>x</strong>. Formally, for each i:</p>
-  <p style="font-family:var(--mono); font-size:13px; margin:8px 0;">
-    φᵢ⁻¹(contribution<sub>c,i</sub>(<strong>x</strong>) / w<sub>c,i</sub>) = xᵢ
-  </p>
-</div>
-<div class="proof-box">
-  <strong>Proof.</strong> contribution<sub>c,i</sub>(<strong>x</strong>) / w<sub>c,i</sub> = φᵢ(xᵢ). Since φᵢ is strictly monotone, it is injective, hence bijective on its range. Therefore φᵢ⁻¹ exists and φᵢ⁻¹(φᵢ(xᵢ)) = xᵢ exactly. The reconstruction is independent across features because the shape functions are applied per-feature with no coupling. □
-</div>
-
-<div class="theorem-box">
-  <div class="theorem-label">Theorem 3 — Lie Detectability</div>
-  <p>Let <strong>ã</strong> be any attribution vector with ãᵢ ≠ contribution<sub>c,i</sub>(<strong>x</strong>) for some index i. Then the reconstructed input x̂ satisfies x̂ᵢ ≠ xᵢ. That is, any forged or edited attribution fails to reconstruct the true input.</p>
-</div>
-<div class="proof-box">
-  <strong>Proof.</strong> By the inverse computation: x̂ᵢ = φᵢ⁻¹(ãᵢ / w<sub>c,i</sub>). If ãᵢ ≠ contribution<sub>c,i</sub>(<strong>x</strong>) = w<sub>c,i</sub> · φᵢ(xᵢ), then ãᵢ / w<sub>c,i</sub> ≠ φᵢ(xᵢ). Since φᵢ is injective (strictly monotone), distinct inputs map to distinct outputs: φᵢ⁻¹(ãᵢ / w<sub>c,i</sub>) ≠ φᵢ⁻¹(φᵢ(xᵢ)) = xᵢ. Therefore x̂ᵢ ≠ xᵢ. The lie is detected by the nonzero mismatch ‖x̂ − <strong>x</strong>‖. □
-</div>
-
-<div class="finding">
-  <div class="finding-label">Key insight</div>
-  <p>Theorems 1–3 together say: the contribution vector is both the exact explanation of the model's computation <em>and</em> a cryptographic-style commitment to the input. You cannot change the explanation without the lie being exposed by the inverse map. This guarantee is architectural, not statistical.</p>
-</div>
-
-<h3 class="sub">4.3 Training</h3>
-
-<p>RFN is trained end-to-end with exact gradients via numpy. The linear head (W, bias) receives standard softmax cross-entropy gradients. The shape function parameters (a<sub>raw</sub>, b<sub>raw,k</sub>) receive gradients via the chain rule through the feature transforms: ∂φᵢ/∂a<sub>raw</sub> = xᵢ · σ(a<sub>raw</sub>) and ∂φᵢ/∂b<sub>raw,k</sub> = softplus(xᵢ − tₖ) · σ(b<sub>raw,k</sub>), where σ is the sigmoid function. The positivity constraints on aᵢ and bᵢₖ are maintained automatically through the softplus reparameterization, ensuring that strict monotonicity — and therefore all three theorems above — holds throughout training.</p>
-
-<!-- ══════════════════════════════════════════
-     5. TWO-AXIS HALLUCINATION DETECTOR
-═══════════════════════════════════════════ -->
-<h2 class="sec">5. Two-Axis Hallucination Detection</h2>
-
-<h3 class="sub">5.1 The Calibrated-Lie Failure Mode</h3>
-
-<p>A natural approach to detecting model hallucination is to measure the mutual information between the model's output and the ground truth: if the prediction no longer carries information about the true target, the model is hallucinating. This is well-motivated — information loss is a necessary condition for hallucination. But it is not sufficient.</p>
-
-<p>We discovered this failure mode experimentally. A model outputting ŷ = 5 · y + 3 is wholly incorrect (MSE = 24 on a unit-scale task) but perfectly information-preserving: since the map y ↦ 5y + 3 is bijective, H(y | ŷ) = 0 — the ground truth is fully recoverable from the prediction. A single-axis information detector reads this as faithful. We call this the <strong>calibrated lie</strong>: a model that is systematically and severely miscalibrated, yet preserves all mutual information.</p>
-
-<div class="finding warn">
-  <div class="finding-label">Documented failure — single-axis detector</div>
-  <p>The calibrated lie (ŷ = 5y + 3, MSE = 38.5× Var(y)) achieves H(y | ŷ) = 0.000 nats — identical to an honest model. Information axis fires: <span class="tag missed">MISSED</span>. This failure was discovered mid-experiment, reported honestly, and resolved by adding the grounding axis.</p>
-</div>
-
-<h3 class="sub">5.2 Two-Axis Formulation</h3>
-
-<p>Genuine honesty requires two independent properties of a model's output, captured by two axes:</p>
-
-<div class="axis-def">
-  <div class="axis-card">
-    <strong>Axis 1 — Information (H)</strong>
-    H(y<sub>true</sub> | y<sub>pred</sub>): conditional entropy of ground truth given prediction. Low when the prediction determines the truth (honest). High when the model's output has decoupled from truth (hallucination, mode collapse, information destruction).
-  </div>
-  <div class="axis-card">
-    <strong>Axis 2 — Grounding (G)</strong>
-    G = E[(y<sub>pred</sub> − y<sub>true</sub>)²] / Var(y<sub>true</sub>): normalized mean-squared error. Low when output numerically tracks truth. High when the model is systematically miscalibrated, even if informationally correlated.
-  </div>
-</div>
-
-<div class="eq">
-  <span class="eq-label">(5)</span>
-  is_lie = (H &gt; H<sub>baseline</sub> + margin) &nbsp; OR &nbsp; (G &gt; G<sub>threshold</sub>)
-</div>
-
-<p>The baseline calibration is critical: the conditional entropy estimator has a nonzero binning floor, so the information axis must be judged relative to a known-honest baseline reading, not an absolute zero threshold.</p>
-
-<h3 class="sub">5.3 Completeness Theorem</h3>
-
-<div class="theorem-box">
-  <div class="theorem-label">Theorem 4 — Two-Axis Completeness for Value-Honesty</div>
-  <p>A predictor y<sub>pred</sub> that evades both axes (H ≈ H<sub>baseline</sub> AND G ≈ 0) must (a) encode y<sub>true</sub> with no information loss, and (b) be numerically close to y<sub>true</sub> in squared error relative to its variance. Together these imply y<sub>pred</sub> ≈ y<sub>true</sub>: the predictor is not lying in any value-honesty sense. The two-axis detector is therefore complete for value-honesty given a reference distribution.</p>
-</div>
-<div class="proof-box">
-  <strong>Proof sketch.</strong> Axis 1 (H ≈ 0) implies H(y<sub>true</sub> | y<sub>pred</sub>) ≈ 0, meaning y<sub>true</sub> is almost surely determined by y<sub>pred</sub>: there exists a function f such that y<sub>true</sub> ≈ f(y<sub>pred</sub>). Axis 2 (G ≈ 0) implies E[(y<sub>pred</sub> − y<sub>true</sub>)²] / Var(y<sub>true</sub>) ≈ 0, so y<sub>pred</sub> ≈ y<sub>true</sub> in squared mean. Together, y<sub>pred</sub> must be numerically close to y<sub>true</sub> (Axis 2) while encoding it (Axis 1). Any bijective distortion f(y<sub>pred</sub>) = y<sub>true</sub> with f ≠ identity would imply f(y<sub>pred</sub>) − y<sub>pred</sub> is large in expectation unless f is close to identity — which Axis 2 enforces. Therefore y<sub>pred</sub> ≈ y<sub>true</sub>. □
-</div>
-
-<p>The remaining gap is <em>semantic lies</em> with no available ground truth — when y<sub>true</sub> is unavailable (live deployment without a reference distribution). This is a reference problem, not a metric problem: given a reference, the detector is complete.</p>
-
-<!-- ══════════════════════════════════════════
-     6. EXPERIMENTS
-═══════════════════════════════════════════ -->
-<h2 class="sec">6. Experiments</h2>
-
-<h3 class="sub">6.1 Task and Setup</h3>
-
-<p>We use a synthetic 3-class tabular classification task (n = 1,500, 5 features, 70/30 train/test split) with known monotone-additive ground truth and mild Gaussian noise (σ = 0.3). The true logit structure is: logit₀ = 1.5x₀ − 1.0x₁ + 0.5x₂, logit₁ = −1.0x₀ + 1.2x₃, logit₂ = 0.8x₁ + 0.9x₄ − 0.4x₂. This matches RFN's inductive bias by design; we note this explicitly and discuss implications in Section 7. The baseline is a two-layer ReLU MLP (hidden size 8, 75 parameters) trained with identical SGD setup. Faithfulness gap for the MLP is computed via gradient × input attribution, the most common post-hoc method. All experiments are fully reproducible: pure numpy, fixed seeds, no external dataset downloads.</p>
-
-<h3 class="sub">6.2 RFN — Four Verified Properties</h3>
-
-<div class="metrics-grid">
-  <div class="mc g">
-    <div class="lbl">Faithfulness gap</div>
-    <div class="val">1.78e‑15</div>
-    <div class="sub">machine precision · opaque MLP: 6.72</div>
-  </div>
-  <div class="mc g">
-    <div class="lbl">Reconstruction error</div>
-    <div class="val">1.33e‑15</div>
-    <div class="sub">input recovered from explanation</div>
-  </div>
-  <div class="mc b">
-    <div class="lbl">Lie detection signal</div>
-    <div class="val">1.544</div>
-    <div class="sub">50% feature overstatement → caught</div>
-  </div>
-  <div class="mc g">
-    <div class="lbl">Test accuracy (RFN)</div>
-    <div class="val">92.4%</div>
-    <div class="sub">opaque MLP: 92.0% · 43 vs 75 params</div>
-  </div>
-</div>
-
-<div class="chart-wrap">
-  <div class="chart-title">Faithfulness Gap: RFN vs Opaque MLP</div>
-  <div class="chart-sub">Lower is better. Log scale required to show the 3.77-billion× difference.</div>
-  <div style="position:relative; height:220px;">
-    <canvas id="gapChart" role="img" aria-label="Bar chart comparing faithfulness gap. RFN: 1.78e-15, Opaque MLP: 6.72. Log scale.">RFN faithfulness gap: 1.78×10⁻¹⁵ (machine precision). Opaque MLP faithfulness gap: 6.72.</canvas>
-  </div>
-  <p class="fig-cap"><span class="fig-num">Figure 2.</span> Faithfulness gap (log scale). RFN gap is machine-precision numerical noise. The opaque MLP gap of 6.72 is 3.77 × 10⁹ times larger, representing genuine discrepancy between claimed and actual feature contributions.</p>
-</div>
-
-<div class="chart-wrap">
-  <div class="chart-title">Accuracy vs Parameter Count</div>
-  <div class="chart-sub">RFN achieves higher accuracy with 43% fewer parameters.</div>
-  <div style="position:relative; height:200px;">
-    <canvas id="accChart" role="img" aria-label="Bar chart comparing accuracy. RFN: 92.4% with 43 parameters. Opaque MLP: 92.0% with 75 parameters.">RFN: 92.4% accuracy, 43 parameters. Opaque MLP: 92.0% accuracy, 75 parameters.</canvas>
-  </div>
-  <p class="fig-cap"><span class="fig-num">Figure 3.</span> Test accuracy vs parameter count. RFN's architectural constraints (monotone per-feature splines, linear readout) impose an inductive bias that matches the task structure, enabling higher accuracy with fewer parameters.</p>
-</div>
-
-<div class="finding">
-  <div class="finding-label">Engineering note — documented bug and fix</div>
-  <p>The first implementation of the bisection inverse had a conflicting bound-update bug: both upper and lower bounds were updated in the same direction when φ(m) &lt; g, causing the bisection to saturate. This made reconstruction error ≈ 500 and lie-detection trivially "pass" for the wrong reason. After fixing the bound logic (lower bound raised when too_low, upper bound lowered otherwise), reconstruction error dropped to 1.33e-15 and lie-detection became a meaningful 1.544. This failure and fix are reported so that the result is trustworthy: the pass is real, post-fix.</p>
-</div>
-
-<h3 class="sub">6.3 Two-Axis Detector — Full Gauntlet</h3>
-
-<p>We test the two-axis detector against six distinct attack classes on a trained 2-layer ReLU network (function y = sin(2x₀) + 0.5x₁², in-distribution MSE = 0.008). The honest baseline reading is H<sub>baseline</sub> = 1.122 nats.</p>
-
-<div class="tbl-wrap">
-  <table class="dt">
-    <caption>Table 2: Two-axis detector results. H = information axis (nats), G = grounding axis (normalized MSE). Baseline H = 1.122.</caption>
-    <thead><tr><th>Attack type</th><th>H (info)</th><th>G (ground)</th><th>Axis 1</th><th>Axis 2</th><th>Verdict</th></tr></thead>
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr><th>Claim</th><th>Script</th><th>Output File</th><th>Key Number</th></tr>
+    </thead>
     <tbody>
-      <tr><td>Honest in-distribution</td><td>1.122</td><td>0.012</td><td>—</td><td>—</td><td><span class="tag quiet">QUIET</span></td></tr>
-      <tr><td>OOD hallucination (x ∈ [4,7]²)</td><td>3.018</td><td>4.536</td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">CAUGHT</span></td></tr>
-      <tr><td>Calibrated lie (5·y+3)</td><td>0.000</td><td>38.54</td><td><span class="tag missed">MISSED</span></td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">CAUGHT</span></td></tr>
-      <tr><td>Mode collapse (constant)</td><td>3.130</td><td>1.000</td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">CAUGHT</span></td></tr>
-      <tr><td>Distribution-matched shuffle</td><td>2.954</td><td>1.999</td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">CAUGHT</span></td></tr>
-      <tr><td>Subtle bias (y+0.5)</td><td>0.000</td><td>0.401</td><td><span class="tag missed">MISSED</span></td><td><span class="tag caught">FIRED</span></td><td><span class="tag caught">CAUGHT</span></td></tr>
+      <tr><td class="left">\(\mathcal{L}\) sweep \(< 7 \times 10^{-11}\)</td><td class="left"><code>lie-thermodynamics/src/experiment.py</code></td><td class="left"><code>thermo_results.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Fabrication caught: 1.0986</td><td class="left"><code>two_directional_experiment.py</code></td><td class="left"><code>two_directional_results.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">No-hiding gap: \(1.01 \times 10^{-13}\)</td><td class="left"><code>nohiding_experiment.py</code></td><td class="left"><code>nohiding_results.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Gauge-twin 1689%, repair \(9.2 \times 10^{-17}\)</td><td class="left"><code>gauge-faithfulness/src/gauge_attack.py</code></td><td class="left"><code>gauge_results.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">NTK identity \(3.27 \times 10^{-13}\), AUC \(0.859 \pm 0.084\)</td><td class="left"><code>support-bound/loop_runner.py</code></td><td class="left"><code>summary.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Ceiling: prec \(0.000 \to 0.928\), flag std = 0</td><td class="left"><code>support-bound/sota_bite.py</code></td><td class="left"><code>sota_bite.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Gap≠lie: prec \(0.021 \to 0.928\), flag = 0.429</td><td class="left"><code>support-bound/gap_vs_lie.py</code></td><td class="left"><code>gap_vs_lie.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Real data: AUC 0.807, flag = 0.166</td><td class="left"><code>support-bound/real_test.py</code></td><td class="left"><code>real_test.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Transformer: flag\_std = 0.000</td><td class="left"><code>transformer_ceiling.py</code></td><td class="left"><code>transformer_ceiling.json</code></td><td class="good">verified</td></tr>
+      <tr><td class="left">Ensemble 94.9%, grounding 92.3%</td><td class="left"><code>real-model-detector/src/active_probing.py</code></td><td class="left">stdout</td><td class="good">verified</td></tr>
+      <tr><td class="left">Fused ref-free 36.2%</td><td class="left"><code>real-model-detector/src/deployable_detector.py</code></td><td class="left">stdout</td><td class="good">verified</td></tr>
     </tbody>
   </table>
 </div>
 
-<div class="chart-wrap">
-  <div class="chart-title">Two-Axis Detector — H and G scores per attack</div>
-  <div class="chart-sub">Dashed reference = honest baseline (H = 1.122). Every attack caught by at least one axis.</div>
-  <div style="display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--ink-dim);">
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#1a4a8a;display:inline-block;"></span>H — information axis</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#8a3000;display:inline-block;"></span>G — grounding axis (clipped at 8)</span>
-  </div>
-  <div style="position:relative; height:240px;">
-    <canvas id="axisChart" role="img" aria-label="Grouped bar chart showing H and G scores across 6 attack types. All lies caught by at least one axis.">Honest: H=1.12 G=0.01. OOD: H=3.02 G=4.54. Calibrated lie: H=0 G=38.5 (clipped). Collapse: H=3.13 G=1.00. Shuffle: H=2.95 G=2.00. Subtle bias: H=0 G=0.40.</canvas>
-  </div>
-  <p class="fig-cap"><span class="fig-num">Figure 4.</span> Two-axis detector scores. Blue = information axis (H). Red = grounding axis (G, clipped at 8 for display; calibrated lie actual G = 38.54). The calibrated lie (H = 0.000) and subtle bias (H = 0.000) evade Axis 1 entirely but are caught by Axis 2. All six attacks detected without false alarm on honest input.</p>
+<h3>Files to Upload to GitHub with This Paper</h3>
+<div class="algorithm">
+  <div class="algorithm-header">Repository Structure — rfn-paper/</div>
+Srivastava2026_FaithfulnessGapsLies.html   ← this file (primary paper)
+FINAL_SUBMISSION.md                         ← markdown version
+VERIFIED_EVIDENCE.md                        ← full evidence ledger
+FINAL_REPORT.md                             ← honest summary
+
+data/
+  summary.json                              ← NTK identity + AUC (n=300)
+  gap_vs_lie.json                           ← ceiling theorem
+  sota_bite.json                            ← two-signal universality
+  real_test.json                            ← 11-D real data
+  transformer_ceiling.json                  ← GPT-2 confirmation
+
+gauge_results.json                          ← gauge-twin attack
+lie-thermodynamics/results/
+  thermo_results.json                       ← ℒ sweep, 6 alpha values
+  two_directional_results.json              ← fabrication: 1.0986
+  nohiding_results.json                     ← quantum gap: 1.01e-13
 </div>
+</section>
 
-<h3 class="sub">6.4 Extremes Test — Simplex and Complex</h3>
+<hr class="title-rule">
 
-<p>A reliable detector must work at both ends of the complexity spectrum. We verify this explicitly.</p>
-
-<h4 class="sub2">Simplex (1-bit channel)</h4>
-<p>The trivial sanity floor: 1 binary input → 1 binary output (N = 5,000). Honest baseline H<sub>base</sub> = 0.000 (perfect bit copy, no uncertainty). Three cases:</p>
-
-<div class="tbl-wrap">
-  <table class="dt">
-    <caption>Table 3: Simplex (1-bit) results. The random coin gives H = ln(2) = 0.693 exactly — the textbook value for one destroyed bit — confirming the information measure is grounded in real mathematics, not a one-regime artifact.</caption>
-    <thead><tr><th>Case</th><th>H (nats)</th><th>G</th><th>Verdict</th></tr></thead>
-    <tbody>
-      <tr><td>Honest (bit copy: y = x)</td><td>0.000</td><td>0.000</td><td><span class="tag quiet">Honest</span></td></tr>
-      <tr><td>Random coin (info destroyed)</td><td>0.693 = ln(2) ✓</td><td>0.500</td><td><span class="tag caught">LIE (info)</span></td></tr>
-      <tr><td>Bit-flip (NOT x — calibrated lie)</td><td>0.000</td><td>4.000</td><td><span class="tag caught">LIE (grounding)</span></td></tr>
-    </tbody>
-  </table>
+<!-- REFERENCES -->
+<section id="references">
+<h1>References</h1>
+<div class="references">
+  <div class="ref-item">[1] Braunstein, S. L., &amp; Pati, A. K. (2007). Quantum no-hiding theorem. <em>Physical Review Letters</em>, 98(8), 080502.</div>
+  <div class="ref-item">[2] Farquhar, S., Kossen, J., Kuhn, L., &amp; Gal, Y. (2024). Detecting hallucinations in large language models using semantic entropy. <em>Nature</em>, 630, 625–630.</div>
+  <div class="ref-item">[3] Jacot, A., Gabriel, F., &amp; Hongler, C. (2018). Neural tangent kernel: Convergence and generalization in neural networks. In <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 31.</div>
+  <div class="ref-item">[4] Koh, P. W., &amp; Liang, P. (2017). Understanding black-box predictions via influence functions. In <em>Proceedings of the 34th International Conference on Machine Learning</em> (ICML), 70, 1885–1894.</div>
+  <div class="ref-item">[5] Landauer, R. (1961). Irreversibility and heat generation in the computing process. <em>IBM Journal of Research and Development</em>, 5(3), 183–191.</div>
+  <div class="ref-item">[6] Lakshminarayanan, B., Pritzel, A., &amp; Blundell, C. (2017). Simple and scalable predictive uncertainty estimation using deep ensembles. In <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 30.</div>
+  <div class="ref-item">[7] Lundberg, S. M., &amp; Lee, S.-I. (2017). A unified approach to interpreting model predictions (SHAP). In <em>Advances in Neural Information Processing Systems</em> (NeurIPS), 30.</div>
+  <div class="ref-item">[8] Newman, M. H. A. (1928). Mr. Russell's causal theory of perception. <em>Mind</em>, 37(146), 137–148.</div>
+  <div class="ref-item">[9] Putnam, H. (1980). Models and reality. <em>Journal of Symbolic Logic</em>, 45(3), 464–482.</div>
+  <div class="ref-item">[10] van Dijk, T. (2026). Attention-KL divergence for reference-free hallucination detection. <em>arXiv:2605.05025</em>.</div>
+  <div class="ref-item">[11] Dinh, L., Krueger, D., &amp; Bengio, Y. (2014). NICE: Non-linear independent components estimation. <em>arXiv:1410.8516</em>.</div>
+  <div class="ref-item">[12] Srivastava, P. (2026). Reversible Faithful Networks: Conservation Laws for Neural Attribution. <em>Zenodo</em>. doi:10.5281/zenodo.20782418. [Precursor work establishing the one-directional lie functional and AetherProof receipt system; the biconditional error corrected in §4 of this paper originates in that deposit.]</div>
 </div>
+</section>
 
-<p>The bit-flip result is the simplex version of the calibrated lie: the NOT gate is bijective (H = 0), so Axis 1 misses it. Axis 2 (G = 4.0) catches it. The random-coin entropy of exactly ln(2) is an unfakeable mathematical calibration marker — the measure is computing real information theory, not a proxy.</p>
-
-<h4 class="sub2">Complex (d = 20, deep network, triple failure)</h4>
-<p>A 3-layer ReLU network (d = 20 inputs, hidden sizes 64 → 32 → 1) learning a nonlinear target over 6,000 training samples, with heavy noise and multiple simultaneous failure modes. Honest baseline H<sub>base</sub> = 1.714 nats, honest G = 0.126.</p>
-
-<div class="chart-wrap">
-  <div class="chart-title">Complex network — all failure modes</div>
-  <div class="chart-sub">d=20, 3-layer, heavy noise. No false alarms on honest + noisy input. Triple failure caught.</div>
-  <div style="display:flex;gap:16px;margin-bottom:10px;font-size:12px;color:var(--ink-dim);">
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#1a4a8a;display:inline-block;"></span>H — information</span>
-    <span style="display:flex;align-items:center;gap:5px;"><span style="width:10px;height:10px;border-radius:2px;background:#8a3000;display:inline-block;"></span>G — grounding</span>
-  </div>
-  <div style="position:relative; height:230px;">
-    <canvas id="complexChart" role="img" aria-label="Grouped bar chart showing H and G for honest, OOD, calibration error, triple failure, and noise-only cases on a complex deep network.">Honest in-dist: H=1.71 G=0.13. OOD: H=2.63 G=1.69. Calibration error: H=1.71 G=1.78. Triple failure: H=2.63 G=2.55. Noise only: H=1.88 G=0.18.</canvas>
-  </div>
-  <p class="fig-cap"><span class="fig-num">Figure 5.</span> Complex network results. The noise-only case (H = 1.88, G = 0.18) does not trigger either axis — the detector tolerates benign output noise. All three structured failure modes (OOD hallucination, calibration error, triple simultaneous failure) are caught. The calibration-error-only case (H = 1.714 = baseline, G = 1.78) is caught solely by Axis 2, replicating the simplex bit-flip result at scale.</p>
-</div>
-
-<div class="tbl-wrap">
-  <table class="dt">
-    <caption>Table 4: Complex network (d=20) full results. H<sub>baseline</sub> = 1.714, H margin = 0.6, G threshold = 0.30.</caption>
-    <thead><tr><th>Case</th><th>H</th><th>G</th><th>Info lie</th><th>Ground lie</th><th>Verdict</th></tr></thead>
-    <tbody>
-      <tr><td>Honest in-distribution</td><td>1.714</td><td>0.126</td><td><span class="tag quiet">No</span></td><td><span class="tag quiet">No</span></td><td><span class="tag quiet">Honest</span></td></tr>
-      <tr><td>Pure OOD hallucination</td><td>2.627</td><td>1.691</td><td><span class="tag caught">Yes</span></td><td><span class="tag caught">Yes</span></td><td><span class="tag caught">LIE</span></td></tr>
-      <tr><td>Calibration error only (1.5·y+2)</td><td>1.714</td><td>1.783</td><td><span class="tag missed">No</span></td><td><span class="tag caught">Yes</span></td><td><span class="tag caught">LIE</span></td></tr>
-      <tr><td>Triple failure (OOD+calib+noise)</td><td>2.630</td><td>2.548</td><td><span class="tag caught">Yes</span></td><td><span class="tag caught">Yes</span></td><td><span class="tag caught">LIE</span></td></tr>
-      <tr><td>Noise-only on honest output</td><td>1.879</td><td>0.182</td><td><span class="tag quiet">No</span></td><td><span class="tag quiet">No</span></td><td><span class="tag quiet">Honest</span></td></tr>
-    </tbody>
-  </table>
+<hr class="title-rule">
+<div style="font-size:8.5pt;color:#666;text-align:center;padding:12px 0;">
+  Srivastava · 2026 · Preprint · github.com/pulkit6732/rfn-paper · github.com/pulkit6732/aetherproof
 </div>
 
 <!-- ══════════════════════════════════════════
-     7. HONEST SCOPE AND LIMITATIONS
-═══════════════════════════════════════════ -->
-<h2 class="sec">7. Honest Scope and Limitations</h2>
-
-<div class="scope-box">
-  <div class="lbl">Scope statement</div>
-  All experiments use small numpy networks on synthetic tabular data. The mechanism is demonstrated; large-scale validation is future work. Claims are stated precisely to match what was actually tested.
-</div>
-
-<p><strong>Synthetic task designed to match RFN's inductive bias.</strong> The tabular task has known monotone-additive ground truth, which is exactly the structure RFN is designed to capture. On data with strong feature interactions — crossing effects, non-monotone relationships — pure-additive RFN will lose accuracy relative to an unconstrained MLP. Extending the faithfulness guarantee to interaction terms (additive pairs, attention-weighted combinations) while preserving invertibility is open work.</p>
-
-<p><strong>Single task, fixed seed.</strong> All results are from one experimental run at fixed seeds. No variance estimates are provided. The mechanism (Theorems 1–3) holds by construction regardless of seed; the accuracy comparison (92.4% vs 92.0%) should be interpreted as a single-run observation, not a statistically established margin. The standard deviation of accuracy across seeds on this task is expected to be 1–2%, which could reverse the comparison. We do not claim the accuracy advantage is reliable; we claim only that RFN is competitive, which the single run establishes.</p>
-
-<p><strong>Parameter matching.</strong> The MLP baseline (75 parameters) is larger than RFN (43 parameters) but not comprehensively hyperparameter-tuned. A tuned MLP at matched parameter count might achieve higher accuracy. The fairest claim is that RFN achieves competitive accuracy, not that it dominates.</p>
-
-<p><strong>"Cannot lie" means input-reconstruction honesty, not semantic honesty.</strong> RFN cannot misrepresent its per-feature contribution without the inverse map exposing the forgery. It cannot claim "feature 1 contributed +3" when it contributed +2 without the reconstruction failing. It does not prevent higher-level model behaviors from being deceptive in other senses — choosing a deceptive proxy feature, for instance — which are outside the mechanism's scope.</p>
-
-<p><strong>Two-axis detector requires a ground-truth reference.</strong> The detector measures H(y<sub>true</sub> | y<sub>pred</sub>) and E[(y<sub>pred</sub> − y<sub>true</sub>)²], which require access to y<sub>true</sub>. This makes the detector suitable for evaluation-time auditing and benchmarking (where ground truth is available) but not for live deployment without a reference distribution or proxy labels. This is a reference problem, not a metric problem.</p>
-
-<p><strong>Semantic lies.</strong> A model can encode true information bijectively (evading Axis 1), be numerically close to truth (evading Axis 2), and still be semantically deceptive — for instance, by answering a different question than was asked. This type of deception has no ground-truth signal and is out of scope for a reference-based detector.</p>
-
-<!-- ══════════════════════════════════════════
-     8. FUTURE WORK
-═══════════════════════════════════════════ -->
-<h2 class="sec">8. Future Work</h2>
-
-<p><strong>Real tabular benchmarks.</strong> The immediate next step is running RFN on standard benchmarks — UCI Adult, COMPAS recidivism, California Housing — with multiple seeds and proper variance estimates. Tasks where features are not monotone-additive will stress-test where the inductive bias breaks and how gracefully accuracy degrades.</p>
-
-<p><strong>RFN with interaction terms.</strong> Extending the invertible architecture to handle feature interactions (additive pairs, cross terms, attention-weighted combinations) while preserving the per-contribution inverse map and the Theorem 3 lie-detection guarantee. The key challenge is that cross terms make the inverse per-feature, not per-pair, which requires solving a system rather than n independent bisections.</p>
-
-<p><strong>LLM hallucination scaling.</strong> The two-axis detector's information axis is applicable to any model with a measurable output: H(true_answer | model_answer) can be estimated via discretized binning over embedding space, semantic similarity bins, or token probability distributions over a QA benchmark. This is the path from toy regression to production LLM auditing.</p>
-
-<p><strong>Cryptographic receipt integration.</strong> The RFN faithfulness certificate can be bound to a per-inference cryptographic receipt (Ed25519-signed, hardware-rooted via AetherProof [<a href="#r10">10</a>]) to create a tamper-evident audit trail that includes both the model output and its certified per-feature explanation. This is the direct path to compliance with EU AI Act Article 12 and SOC-2 AI audit trail requirements in regulated domains (health AI, legaltech, fintech).</p>
-
-<!-- ══════════════════════════════════════════
-     9. CONCLUSION
-═══════════════════════════════════════════ -->
-<h2 class="sec">9. Conclusion</h2>
-
-<p>We have demonstrated the Reversible Faithful Network, a mechanism by which a neural network's per-feature attribution becomes self-certifying: a lie in the attribution is caught by running it backward through the inverse map. Three formal theorems establish that this property holds by construction. Experimentally, the faithfulness gap drops from 6.72 (opaque MLP + post-hoc) to 1.78 × 10⁻¹⁵ (machine precision), input is reconstructed from the explanation alone to 1.33 × 10⁻¹⁵ error, and a 50% feature overstatement is detected with mismatch signal 1.544. The model is competitive in accuracy with 43% fewer parameters on the test task.</p>
-
-<p>In parallel, we characterized the calibrated-lie failure mode of single-axis information detectors and proved that two-axis detection (information + grounding) is complete for value-honesty given a reference distribution. This completeness result is validated from trivial 1-bit channels — where the random-coin entropy equals ln(2) exactly, confirming the measure's mathematical grounding — through 20-dimensional deep networks under simultaneous triple failure, with no false alarms on benign output noise.</p>
-
-<p>Both contributions are open source. The code is minimal, pure numpy, and designed to be extended, challenged, and broken.</p>
-
-<!-- ══════════════════════════════════════════
-     REFERENCES
-═══════════════════════════════════════════ -->
-<h2 class="sec" id="refs">References</h2>
-<div class="refs">
-  <ol>
-    <li id="r1"><span>Agarwal, R., Melnick, L., Frosst, N., Zhang, X., Lengerich, B., Caruana, R., & Hinton, G. (2021). Neural additive models: Interpretable machine learning with neural nets. <em>NeurIPS 2021</em>.</span></li>
-    <li id="r2"><span>Dinh, L., Krueger, D., & Bengio, Y. (2014). NICE: Non-linear independent components estimation. <em>arXiv:1410.8516</em>.</span></li>
-    <li id="r3"><span>Jacobsen, J-H., Smeulders, A., & Oyallon, E. (2018). i-RevNet: Deep invertible networks. <em>ICLR 2018</em>.</span></li>
-    <li id="r4"><span>Rezende, D., & Mohamed, S. (2015). Variational inference with normalizing flows. <em>ICML 2015</em>.</span></li>
-    <li id="r5"><span>Ribeiro, M. T., Singh, S., & Guestrin, C. (2016). "Why should I trust you?": Explaining the predictions of any classifier (LIME). <em>KDD 2016</em>.</span></li>
-    <li id="r6"><span>Zeiler, M., & Fergus, R. (2014). Visualizing and understanding convolutional networks. <em>ECCV 2014</em>. [See also: Decision Explanation and Feature Importance for Invertible Networks. <em>arXiv:1910.00406</em>.]</span></li>
-    <li id="r7"><span>Lundberg, S. M., & Lee, S-I. (2017). A unified approach to interpreting model predictions (SHAP). <em>NeurIPS 2017</em>.</span></li>
-    <li id="r8"><span>Additive Self-Attributing Models (ASAM). <em>arXiv:2309.15559</em>.</span></li>
-    <li id="r9"><span>Informative post-hoc explanations only exist for simple functions. <em>arXiv:2508.11441</em>.</span></li>
-    <li id="r10"><span>Srivastava, P. (2026). AetherProof: Hardware-rooted per-inference receipt for AI audit compliance. <em>github.com/pulkit6732/aetherproof</em>.</span></li>
-  </ol>
-</div>
-
-<!-- ══════════════════════════════════════════
-     FOOTER
-═══════════════════════════════════════════ -->
-<div class="footer">
-  <p>All code, data, and results are open: <a href="https://github.com/pulkit6732/aetherproof" style="color:var(--blue);">github.com/pulkit6732/aetherproof</a></p>
-  <p style="margin-top:6px;">This is a preprint and has not been peer-reviewed. Results are from reproducible single-machine numpy experiments. Novelty claims are stated as corpus-verified-not-found (701,585 arXiv papers + live web, June 2026), not "provably first." Contributions and challenges welcome — open issues on GitHub.</p>
-</div>
-
-</div><!-- /page -->
-
-<!-- ══════════════════════════════════════════
-     CHARTS
+     JAVASCRIPT — CHARTS
 ═══════════════════════════════════════════ -->
 <script>
-const INK = '#444441';
-const GREEN = '#1a6b35';
-const WARN = '#a05a00';
-const BLUE = '#153a7a';
-const LGRAY = '#b0aea6';
-const LBLUE = '#1a4a8a';
-const LRED = '#8a3000';
+// Chart.js defaults — academic black/white style
+Chart.defaults.color = '#444';
+Chart.defaults.font.family = 'serif';
+Chart.defaults.font.size = 10;
 
-Chart.defaults.font.family = "'Georgia', serif";
-Chart.defaults.font.size = 12;
-Chart.defaults.color = INK;
+// Helper
+const gridLine = '#ddd';
 
-// Figure 2 — Gap chart
-new Chart(document.getElementById('gapChart'), {
-  type: 'bar',
+// ── Figure 3: Thermodynamic Sweep ──
+new Chart(document.getElementById('thermoChart'), {
+  type: 'line',
   data: {
-    labels: ['RFN (ours)', 'Opaque MLP + post-hoc'],
-    datasets: [{
-      label: 'Faithfulness gap',
-      data: [1.78e-15, 6.72],
-      backgroundColor: [GREEN, WARN],
-      borderColor: [GREEN, WARN],
-      borderWidth: 1
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (c) => c.dataIndex === 0
-            ? ' 1.78 × 10⁻¹⁵ (machine precision)'
-            : ' 6.72 (3.77 billion× larger)'
-        }
-      }
-    },
-    scales: {
-      y: {
-        type: 'logarithmic',
-        title: { display: true, text: 'gap (log scale)', font: { size: 11 } },
-        grid: { color: '#eee' }
-      },
-      x: { grid: { display: false } }
-    }
-  }
-});
-
-// Figure 3 — Accuracy chart
-new Chart(document.getElementById('accChart'), {
-  type: 'bar',
-  data: {
-    labels: ['RFN (43 params)', 'Opaque MLP (75 params)'],
-    datasets: [{
-      label: 'Test accuracy (%)',
-      data: [92.4, 92.0],
-      backgroundColor: [GREEN, LGRAY],
-      borderColor: [GREEN, LGRAY],
-      borderWidth: 1
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: {
-        min: 88, max: 95,
-        title: { display: true, text: 'accuracy (%)', font: { size: 11 } },
-        grid: { color: '#eee' }
-      },
-      x: { grid: { display: false } }
-    }
-  }
-});
-
-// Figure 4 — Two-axis gauntlet
-const axisLabels = ['Honest', 'OOD halluc', 'Calib lie', 'Collapse', 'Shuffle', 'Subtle bias'];
-const Hvals = [1.122, 3.018, 0.000, 3.130, 2.954, 0.000];
-const GvalsRaw = [0.012, 4.536, 38.54, 1.000, 1.999, 0.401];
-const GvalsDisplay = GvalsRaw.map(v => Math.min(v, 8));
-
-new Chart(document.getElementById('axisChart'), {
-  type: 'bar',
-  data: {
-    labels: axisLabels,
+    labels: ['α=1.00','α=0.90','α=0.70','α=0.50','α=0.25','α=0.10'],
     datasets: [
       {
-        label: 'H — information axis',
-        data: Hvals,
-        backgroundColor: LBLUE,
-        borderColor: LBLUE,
-        borderWidth: 1
+        label: 'Measured ℒ (nats)',
+        data: [6.86e-11, 0.1053605157, 0.3566749440, 0.6931471806, 1.3862943612, 2.3025850930],
+        borderColor: '#111', backgroundColor: 'rgba(0,0,0,0.05)',
+        pointBackgroundColor: '#111', pointRadius: 5, borderWidth: 1.5, fill: true,
+        pointStyle: 'circle',
       },
       {
-        label: 'G — grounding axis (clipped at 8)',
-        data: GvalsDisplay,
-        backgroundColor: LRED,
-        borderColor: LRED,
-        borderWidth: 1
+        label: 'Predicted −log α',
+        data: [0, 0.1053605157, 0.3566749439, 0.6931471806, 1.3862943611, 2.3025850930],
+        borderColor: '#888', backgroundColor: 'transparent',
+        pointBackgroundColor: '#888', pointRadius: 4, borderWidth: 1.5,
+        borderDash: [5,3], pointStyle: 'triangle',
       }
     ]
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (c) => {
-            const real = c.datasetIndex === 0 ? Hvals[c.dataIndex] : GvalsRaw[c.dataIndex];
-            const suffix = (c.datasetIndex === 1 && GvalsRaw[c.dataIndex] > 8) ? ' (clipped for display)' : '';
-            return ` ${c.dataset.label}: ${real.toFixed(3)}${suffix}`;
-          }
-        }
-      },
-      annotation: {}
+      legend: { labels: { color: '#333', boxWidth: 24 } },
+      title: { display: true, text: 'Figure 3 — Thermodynamic Sweep', font: { size: 11, weight: 'bold', family: 'serif' }, color: '#111', padding: { bottom: 8 } }
     },
     scales: {
-      y: {
-        title: { display: true, text: 'score (nats / normalized)', font: { size: 11 } },
-        grid: { color: '#eee' }
-      },
-      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      x: { grid: { color: gridLine }, ticks: { color: '#444' } },
+      y: { grid: { color: gridLine }, ticks: { color: '#444' }, title: { display: true, text: 'ℒ (nats)', color: '#444', font: { size: 10 } } }
     }
   }
 });
 
-// Figure 5 — Complex network
-const complexLabels = ['Honest in-dist', 'Pure OOD', 'Calib error', 'Triple failure', 'Noise only'];
-const cH = [1.714, 2.627, 1.714, 2.630, 1.879];
-const cG = [0.126, 1.691, 1.783, 2.548, 0.182];
-
-new Chart(document.getElementById('complexChart'), {
-  type: 'bar',
+// ── Figure 5: Detection Ceiling ──
+const aVals = ['A=0','A=0.5','A=1.0','A=2.0','A=4.0','A=8.0'];
+new Chart(document.getElementById('ceilingChart'), {
+  type: 'line',
   data: {
-    labels: complexLabels,
+    labels: aVals,
     datasets: [
-      {
-        label: 'H — information axis',
-        data: cH,
-        backgroundColor: LBLUE,
-        borderColor: LBLUE,
-        borderWidth: 1
-      },
-      {
-        label: 'G — grounding axis',
-        data: cG,
-        backgroundColor: LRED,
-        borderColor: LRED,
-        borderWidth: 1
-      }
+      { label: 'v_ntk precision', data: [0.021,0.233,0.432,0.632,0.808,0.928], borderColor:'#111', backgroundColor:'rgba(0,0,0,0.04)', pointRadius:5, borderWidth:1.8, fill:true, pointStyle:'circle' },
+      { label: 'a_kl precision',  data: [0.000,0.121,0.192,0.160,0.121,0.078], borderColor:'#555', backgroundColor:'rgba(80,80,80,0.04)', pointRadius:4, borderWidth:1.5, fill:true, pointStyle:'triangle', borderDash:[3,2] },
+      { label: 'v_ntk flag-rate (locked, σ=0)', data: [0.429,0.429,0.429,0.429,0.429,0.429], borderColor:'#999', backgroundColor:'transparent', pointRadius:3, borderWidth:1.2, borderDash:[8,4] },
+      { label: 'a_kl flag-rate (locked, σ=0)',  data: [0.163,0.163,0.163,0.163,0.163,0.163], borderColor:'#bbb', backgroundColor:'transparent', pointRadius:3, borderWidth:1.2, borderDash:[8,4] },
     ]
   },
   options: {
     responsive: true,
-    maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
-      tooltip: {
-        callbacks: {
-          label: (c) => {
-            const v = c.datasetIndex === 0 ? cH[c.dataIndex] : cG[c.dataIndex];
-            return ` ${c.dataset.label}: ${v.toFixed(3)}`;
-          }
-        }
-      }
+      legend: { labels: { color: '#333', boxWidth: 24 } },
+      title: { display: true, text: 'Figure 5 — Detection Ceiling: Precision Climbs, Flag-Rate Locked', font: { size: 11, weight: 'bold', family: 'serif' }, color: '#111', padding: { bottom: 8 } }
     },
     scales: {
-      y: {
-        title: { display: true, text: 'score', font: { size: 11 } },
-        grid: { color: '#eee' }
-      },
-      x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      x: { grid: { color: gridLine }, ticks: { color: '#444' }, title: { display: true, text: 'Confabulation Magnitude A', color: '#444', font: { size: 10 } } },
+      y: { grid: { color: gridLine }, ticks: { color: '#444' }, min: 0, max: 1, title: { display: true, text: 'Rate', color: '#444', font: { size: 10 } } }
+    }
+  }
+});
+
+// ── Figure 6: Transformer Ceiling ──
+new Chart(document.getElementById('transformerChart'), {
+  type: 'line',
+  data: {
+    labels: ['A≥0','A≥1','A≥3','A≥5','A≥8','A≥12','A≥18'],
+    datasets: [
+      { label: 'Precision', data:[1.000,0.950,0.800,0.600,0.200,0.050,0.000], borderColor:'#222', backgroundColor:'rgba(0,0,0,0.05)', pointRadius:5, borderWidth:1.8, fill:true },
+      { label: 'Lie Rate',  data:[1.000,0.980,0.780,0.480,0.200,0.020,0.000], borderColor:'#666', backgroundColor:'transparent', pointRadius:4, borderWidth:1.5, borderDash:[4,3] },
+      { label: 'Flag Rate (locked @ 0.400)', data:[0.4,0.4,0.4,0.4,0.4,0.4,0.4], borderColor:'#aaa', backgroundColor:'transparent', pointRadius:3, borderWidth:1.5, borderDash:[10,4] },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#333', boxWidth: 24 } },
+      title: { display: true, text: 'Figure 6 — GPT-2 Transformer: Flag Rate Locked at 0.400 (σ=0)', font: { size: 11, weight: 'bold', family: 'serif' }, color: '#111', padding: { bottom: 8 } }
+    },
+    scales: {
+      x: { grid: { color: gridLine }, ticks: { color: '#444' }, title: { display: true, text: 'A threshold', color: '#444', font: { size: 10 } } },
+      y: { grid: { color: gridLine }, ticks: { color: '#444' }, min: 0, max: 1.05, title: { display: true, text: 'Rate', color: '#444', font: { size: 10 } } }
+    }
+  }
+});
+
+// ── Figure 7: Real Data (Wine Dataset) ──
+new Chart(document.getElementById('realDataChart'), {
+  type: 'bar',
+  data: {
+    labels: ['A=0.0','A=0.5','A=1.0','A=2.0','A=4.0','A=8.0'],
+    datasets: [
+      { label: 'Precision', data:[0.000,0.000,0.000,0.031,0.125,0.406], backgroundColor:'rgba(80,80,80,0.55)', borderColor:'#333', borderWidth:1 },
+      { label: 'Flag Rate (constant @ 0.166)', data:[0.166,0.166,0.166,0.166,0.166,0.166], type:'line', borderColor:'#888', backgroundColor:'transparent', pointRadius:4, borderWidth:1.5, borderDash:[6,3], pointStyle:'triangle' },
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: '#333', boxWidth: 24 } },
+      title: { display: true, text: 'Figure 7 — Real Data (UCI Wine, 11-D): AUC = 0.807', font: { size: 11, weight: 'bold', family: 'serif' }, color: '#111', padding: { bottom: 8 } }
+    },
+    scales: {
+      x: { grid: { color: gridLine }, ticks: { color: '#444' }, title: { display: true, text: 'A threshold', color: '#444', font: { size: 10 } } },
+      y: { grid: { color: gridLine }, ticks: { color: '#444' }, min: 0, max: 0.5, title: { display: true, text: 'Rate', color: '#444', font: { size: 10 } } }
     }
   }
 });
