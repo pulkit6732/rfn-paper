@@ -1,21 +1,11 @@
 cff-version: 1.2.0
 message: "If you use this work, please cite it as below."
-title: "Reversible Faithful Networks: Invertibility as a Tamper-Detection Certificate for Additive Attribution"
 authors:
-  - family-names: "Srivastava"
-    given-names: "Pulkit"
-date-released: 2026-06-21
-url: "https://github.com/pulkit6732/rfn-paper"
-license: "CC-BY-4.0"
-abstract: >
-  Post-hoc explanations for neural networks suffer from a fundamental
-  faithfulness gap: the stated reasons for a model's decision need not
-  reflect its actual computation, and no mechanism exists to catch a
-  forged attribution. We introduce the Reversible Faithful Network (RFN),
-  an architecture that closes both problems by construction.
-keywords:
-  - machine learning
-  - interpretability
-  - invertible neural networks
-  - faithful explanations
-  - hallucination detection
+  - family-names: Srivastava
+    given-names: Pulkit
+title: "Faithfulness, Gaps, and Lies: A Unified Theory of Neural Model Honesty"
+version: 2.0
+date-released: 2026-06-28
+doi: 10.5281/zenodo.20993925
+url: "https://zenodo.org/records/20993925"
+license: CC-BY-4.0
