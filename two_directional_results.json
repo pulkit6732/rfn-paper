@@ -1,0 +1,25 @@
+{
+  "faithful": {
+    "total": 9.153006130993665e-11,
+    "delete": 7.036092079688434e-11,
+    "fabricate": 2.1169140513052307e-11
+  },
+  "delete": {
+    "total": 1.2039728043738256,
+    "delete": 1.2039728043738256,
+    "fabricate": 0.0,
+    "predicted": 1.2039728043259361
+  },
+  "fabricate": {
+    "total": 1.0986122886247545,
+    "delete": 0.0,
+    "fabricate": 1.0986122886247545,
+    "predicted": 1.0986122886681098,
+    "ungrounded_faithful": 0.0,
+    "ungrounded_fab": 0.0
+  },
+  "completeness_gain": {
+    "old_missed": 0.0,
+    "new_caught": 1.0986122886681098
+  }
+}
