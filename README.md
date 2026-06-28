@@ -1,61 +1,82 @@
-# Reversible Faithful Networks (RFN)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20782418.svg)](https://doi.org/10.5281/zenodo.20782418)
+# Faithfulness, Gaps, and Lies: A Unified Theory of Neural Model Honesty
 
-### Invertibility as a Tamper-Detection Certificate for Additive Attribution
-*with a Two-Axis Completeness Theorem for Regression Hallucination Detection*
+**Pulkit Srivastava · Independent Researcher · India · June 2026**
 
-**Author:** Pulkit Srivastava
-Independent Research · India
-[GitHub](https://github.com/pulkit6732/aetherproof) · [LinkedIn](https://linkedin.com/in/pulkit-srivastava-2033942a6)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20993925.svg)](https://doi.org/10.5281/zenodo.20993925)
 
-**Read the paper (live, rendered):** https://pulkit6732.github.io/rfn-paper/
+**[Read the paper](https://pulkit6732.github.io/rfn-paper/)** · 
+**[Zenodo deposit](https://zenodo.org/records/20993925)** · 
+**[Prior work (RFN v1)](https://zenodo.org/records/20782418)**
 
-
-Source file: [reversible_faithful_networks.html](./reversible_faithful_networks.html)
-
-> **Status:** Preprint. Pending submission to arXiv (cs.LG).
-
-**Code:** [github.com/pulkit6732/faithful-net](https://github.com/pulkit6732/faithful-net)
 ---
 
-## Abstract
+## One-sentence result
 
-Post-hoc explanations for neural networks suffer from a fundamental *faithfulness gap*: the stated reasons for a model's decision need not reflect its actual computation, and no mechanism exists to catch a forged attribution. We introduce the **Reversible Faithful Network (RFN)**, an architecture that closes both problems by construction. Each per-feature contribution in an RFN is simultaneously (a) an exact additive component of the output logit and (b) an invertible encoding of the corresponding input feature via a strictly monotonic shape function. A forged or edited attribution is therefore mechanically detectable: running the explanation backward through the inverse map fails to reconstruct the original input.
+Single-model reference-free hallucination detection is provably 
+uncalibratable — the best internal signal detects *gaps*, not *lies* — 
+and the lie/no-lie distinction inside a gap is information only 
+external grounding can supply.
 
-We prove four properties experimentally — exact faithfulness (gap 1.78 × 10⁻¹⁵), lossless input reconstruction from explanation alone (error 1.33 × 10⁻¹⁵), lie-detection via reverse pass (mismatch 1.544 for a 50% feature overstatement), and competitive accuracy (92.4% vs 92.0% for an opaque MLP using 43 vs 75 parameters).
+## Four results
 
-We further characterize a failure mode of single-axis hallucination detection — the *calibrated lie*, in which a bijective distortion of truth preserves mutual information yet is wholly wrong — and prove that a two-axis detector combining information (H) and grounding (G) is complete for value-honesty.
+1. **Conservation Law** — L(f) = E[|log|det J(x)||] = 0 iff faithful. 
+   Verified to <7×10⁻¹¹ nats. Two-directional extension catches 
+   fabrication (1.0986 nats). Quantum no-hiding gap = 1.01×10⁻¹³.
 
-The core novelty is not invertible networks, additive models, or hallucination metrics individually, but their specific fusion: **reversibility as an integrity certificate on additive faithfulness**.
+2. **Gauge Correction** — |det J|=1 is necessary but NOT sufficient. 
+   Gauge-twin achieves 16.89× attribution swing (1689%) while passing 
+   every determinant test. L_attr catches it at 5.163 nats.
 
-## Contributions
+3. **NTK Identity** — training-support concentration = NTK-GP posterior 
+   variance. Verified to 3.27×10⁻¹³ over n=300 networks. AUC 0.859±0.084.
 
-1. **Architecture (RFN)** — per-feature contributions that are simultaneously exact additive components of the output and invertible encodings of the input.
-2. **Theorems** — formal proofs of exact faithfulness, exact reversibility, and lie-detectability by construction.
-3. **Two-axis completeness** — a formal characterization of the calibrated-lie failure mode, with a proof that information + grounding detection is complete for value-honesty.
+4. **Detection Ceiling** — ∂v/∂A = 0. Flag-rate locked constant while 
+   precision spans 0.000→0.928. Confirmed across four architectures 
+   including GPT-2 (117M parameters).
 
-## Code & Data
+## Reproduce everything
 
-All experiments are reproducible, pure-numpy, single-machine. Code lives in this repo / linked from [AetherProof](https://github.com/pulkit6732/aetherproof).
+```bash
+# Clone and run any experiment — no arguments needed
+git clone https://github.com/pulkit6732/rfn-paper
+cd rfn-paper
+pip install numpy scipy scikit-learn torch transformers
+python transformer_ceiling.py   # → transformer_ceiling.json
+```
+
+Every claim maps to one JSON file. See the reproducibility ledger 
+in the paper (Appendix A).
+
+## Files
+
+| File | Purpose |
+|------|---------|
+| `index.html` | The paper (rendered at pulkit6732.github.io/rfn-paper) |
+| `transformer_ceiling.py` | GPT-2 ceiling experiment |
+| `thermo_results.json` | Conservation law sweep |
+| `two_directional_results.json` | Fabrication lie = 1.0986 nats |
+| `nohiding_results.json` | Quantum gap = 1.01×10⁻¹³ |
+| `gauge_results.json` | Gauge-twin 1689%, repair 9.2×10⁻¹⁷ |
+| `summary.json` | NTK identity 3.27×10⁻¹³, AUC 0.859 |
+| `sota_bite.json` | Two-signal universality table |
+| `gap_vs_lie.json` | Precision 0.021→0.928, flag=0.429 |
+| `real_test.json` | UCI wine 11-D, AUC 0.807 |
+| `transformer_ceiling.json` | GPT-2 flag_std=0.000 |
 
 ## Citation
 
 ```bibtex
-@misc{srivastava2026rfn,
-  author       = {Srivastava, Pulkit},
-  title        = {Reversible Faithful Networks: Invertibility as a Tamper-Detection
-                   Certificate for Additive Attribution},
-  year         = {2026},
-  howpublished = {\url{https://github.com/pulkit6732/rfn-paper}},
-  note         = {Preprint, pending arXiv submission}
+@misc{srivastava2026faithfulness,
+  author    = {Srivastava, Pulkit},
+  title     = {Faithfulness, Gaps, and Lies: A Unified Theory 
+               of Neural Model Honesty},
+  year      = {2026},
+  doi       = {10.5281/zenodo.20993925},
+  url       = {https://zenodo.org/records/20993925},
+  note      = {Preprint}
 }
 ```
 
 ## License
 
-Paper text: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-Code (where applicable): MIT
-
----
-
-*This is a preprint and has not been peer-reviewed. Novelty claims are stated as corpus-verified-not-found (701,585 arXiv papers + live web, June 2026), not "provably first." Contributions and challenges welcome — open an issue.*
+Paper: CC BY 4.0 · Code: MIT
